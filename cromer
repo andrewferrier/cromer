@@ -12,9 +12,11 @@ import logging.handlers
 import os
 import sys
 
+
 def touch(fname, times=None):
     with open(fname, 'a'):
         os.utime(fname, times)
+
 
 logger = logging.getLogger('cromer')
 logger.propagate = False
