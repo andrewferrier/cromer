@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from sys import platform as _platform
+from subprocess import Popen, PIPE
 import argparse
 import coloredlogs
 import hashlib
@@ -8,6 +9,10 @@ import logging
 import logging.handlers
 import os
 import sys
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
 
 logger = logging.getLogger('cromer')
 logger.propagate = False
@@ -68,3 +73,17 @@ for arg in args.args:
 hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest())
 
 logger.debug("Hashfile for this command: " + hashfile)
+
+my_process = Popen(args.args, stdin=None, stdout=PIPE, stderr=PIPE)
+output, error = my_process.communicate()
+my_process.wait()
+
+logger.debug("Output is " + str(output))
+logger.debug("Error is " + str(error))
+logger.debug("Returncode is " + str(my_process.returncode))
+
+if my_process.returncode > 0 or (not error == b''):
+    logger.debug("Failed")
+else:
+    logger.debug("Succeeded - touching " + hashfile)
+    touch(hashfile)
