@@ -1,0 +1,9 @@
+Package: cromer
+Version: <version_goes_here>
+Section: base
+Priority: optional
+Architecture: all
+Depends: python3, cron
+Maintainer: Andrew Ferrier <andrew.ferrier@example.com>
+Description: Wrapper utility for cron jobs
+ Wrapper utility for cron jobs
