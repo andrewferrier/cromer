@@ -3,8 +3,10 @@
 from sys import platform as _platform
 from subprocess import Popen, PIPE
 import argparse
+import calendar
 import coloredlogs
 import hashlib
+import time
 import logging
 import logging.handlers
 import os
@@ -43,6 +45,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--verbose', action='count', default=0,
                     help="Make the output more verbose. This affects both the output logged to "
                     "syslog, as well as output to the console. Using this twice makes it doubly verbose.")
+
+parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=int, default=600)
 
 parser.add_argument('args', nargs=argparse.REMAINDER)
 
@@ -83,7 +87,17 @@ logger.debug("Error is " + str(error))
 logger.debug("Returncode is " + str(my_process.returncode))
 
 if my_process.returncode > 0 or (not error == b''):
+    errorInfo = "returncode " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
     logger.debug("Failed")
+    if os.path.isfile(hashfile):
+        if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success:
+            logger.debug("Still within time delta; ignoring " + errorInfo)
+        else:
+            logger.error("Time delta exceeded, command failed with " + errorInfo)
+    else:
+        logger.error("Hashfile missing, command failed with " + errorInfo)
+
 else:
     logger.debug("Succeeded - touching " + hashfile)
+    sys.stdout.buffer.write(output)
     touch(hashfile)
