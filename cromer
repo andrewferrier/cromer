@@ -3,9 +3,11 @@
 from sys import platform as _platform
 import argparse
 import coloredlogs
-import sys
+import hashlib
 import logging
 import logging.handlers
+import os
+import sys
 
 logger = logging.getLogger('cromer')
 logger.propagate = False
@@ -58,3 +60,11 @@ if syserr_handler:
         syserr_handler.setLevel(logging.WARNING)
 
 logger.debug("Arguments are: " + str(args))
+
+m = hashlib.md5()
+for arg in args.args:
+    m.update(str.encode(arg))
+
+hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest())
+
+logger.debug("Hashfile for this command: " + hashfile)
