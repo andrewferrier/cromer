@@ -89,15 +89,15 @@ logger.debug("Error is " + str(error))
 logger.debug("Returncode is " + str(my_process.returncode))
 
 if my_process.returncode > 0 or (not error == b''):
-    errorInfo = "returncode " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
+    errorInfo = "command attempted " + ' '.join(args.args) + "\nRETURNCODE: " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
     logger.debug("Failed")
     if os.path.isfile(hashfile):
         if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success:
-            logger.debug("Still within time delta; ignoring " + errorInfo)
+            logger.debug("Still within time delta; ignoring: " + errorInfo)
         else:
-            logger.error("Time delta exceeded, command failed with " + errorInfo)
+            logger.error("Time delta exceeded, failed:  " + errorInfo)
     else:
-        logger.error("Hashfile missing, command failed with " + errorInfo)
+        logger.error("Hashfile missing, failed: " + errorInfo)
 
 else:
     logger.debug("Succeeded - touching " + hashfile)
