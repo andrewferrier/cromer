@@ -6,11 +6,12 @@ import argparse
 import calendar
 import coloredlogs
 import hashlib
-import time
 import logging
 import logging.handlers
 import os
+import re
 import sys
+import time
 
 
 def touch(fname, times=None):
@@ -72,13 +73,15 @@ if syserr_handler:
     else:
         syserr_handler.setLevel(logging.WARNING)
 
+assert(len(args.args) > 1)
+
 logger.debug("Arguments are: " + str(args))
 
 m = hashlib.md5()
 for arg in args.args:
     m.update(str.encode(arg))
 
-hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest())
+hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() + "." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args)))
 
 logger.debug("Hashfile for this command: " + hashfile)
 
