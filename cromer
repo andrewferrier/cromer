@@ -75,9 +75,9 @@ if syserr_handler:
     else:
         syserr_handler.setLevel(logging.WARNING)
 
-assert(len(args.args) > 0)
-
 logger.debug("Arguments are: " + str(args))
+
+assert(len(args.args) > 0)
 
 m = hashlib.md5()
 for arg in args.args:
