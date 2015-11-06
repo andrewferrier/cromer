@@ -96,7 +96,7 @@ try:
 except TimeoutExpired:
     my_process.kill()
     output, error = my_process.communicate()
-    logger.error("Timeout of " + str(args.timeout) + " hit")
+    logger.debug("Timeout of " + str(args.timeout) + " hit")
     timeout = True
 
 logger.debug("Output is " + str(output))
