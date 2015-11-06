@@ -73,7 +73,7 @@ if syserr_handler:
     else:
         syserr_handler.setLevel(logging.WARNING)
 
-assert(len(args.args) > 1)
+assert(len(args.args) > 0)
 
 logger.debug("Arguments are: " + str(args))
 
