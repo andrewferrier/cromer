@@ -119,17 +119,17 @@ if timeout or my_process.returncode > 0 or (not error == b''):
     errorInfo = "Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
     if os.path.isfile(hashfile):
         if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
-            logger.debug("Still within time delta; ignoring: " + errorInfo)
+            logger.info("Still within time delta; ignoring: " + errorInfo)
         else:
             logger.error("Time delta exceeded, failed:  " + errorInfo)
     else:
         logger.error("Hashfile missing, failed: " + errorInfo)
 
 else:
-    logger.debug("Succeeded - touching " + hashfile)
     if not args.quiet_stdout:
         sys.stdout.buffer.write(output)
 
+    logger.debug("Succeeded - writing output to " + hashfile)
     jsonObject = { 'output': str(output), 'error': str(error), 'returncode': my_process.returncode, 'lastsuccessfulrun': str(datetime.now()) }
     with open(hashfile, 'w') as fp:
         json.dump(jsonObject, fp, indent=4)
