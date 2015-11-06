@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 from sys import platform as _platform
 from subprocess import Popen, PIPE, TimeoutExpired
 import argparse
 import calendar
 import coloredlogs
 import hashlib
+import json
 import logging
 import logging.handlers
 import os
 import re
 import sys
 import time
-
-
-def touch(fname, times=None):
-    with open(fname, 'a'):
-        os.utime(fname, times)
 
 
 logger = logging.getLogger('cromer')
@@ -117,4 +114,7 @@ else:
     logger.debug("Succeeded - touching " + hashfile)
     if not args.quiet_stdout:
         sys.stdout.buffer.write(output)
-    touch(hashfile)
+
+    jsonObject = { 'output': str(output), 'error': str(error), 'returncode': my_process.returncode, 'lastsuccessfulrun': str(datetime.now()) }
+    with open(hashfile, 'w') as fp:
+        json.dump(jsonObject, fp, indent=4)
