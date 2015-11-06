@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from sys import platform as _platform
 from subprocess import Popen, PIPE, TimeoutExpired
 import argparse
@@ -14,6 +14,19 @@ import os
 import re
 import sys
 import time
+
+
+def parse_time_interval(time_str):
+    regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
+    parts = regex.match(time_str)
+    if not parts:
+        return
+    parts = parts.groupdict()
+    time_params = {}
+    for (name, param) in parts.items():
+        if param:
+            time_params[name] = int(param)
+    return timedelta(**time_params)
 
 
 logger = logging.getLogger('cromer')
@@ -50,7 +63,9 @@ parser.add_argument('-t', '--timeout', dest='timeout', type=int, default=60*60)
 
 parser.add_argument('-q', '--quiet-stdout', dest='quiet_stdout', action='store_true', default=False)
 
-parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=int, default=600)
+parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval, default=600,
+                    help="The maximum interval allowed for failures before cromer will 'pass through' the stderr " +
+                    "information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s.")
 
 parser.add_argument('args', nargs=argparse.REMAINDER)
 
@@ -103,7 +118,7 @@ logger.debug("Returncode is " + str(my_process.returncode))
 if timeout or my_process.returncode > 0 or (not error == b''):
     errorInfo = "Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
     if os.path.isfile(hashfile):
-        if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success:
+        if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
             logger.debug("Still within time delta; ignoring: " + errorInfo)
         else:
             logger.error("Time delta exceeded, failed:  " + errorInfo)
