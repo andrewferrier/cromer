@@ -47,7 +47,8 @@ sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(l
 syslog_handler.setFormatter(sysLogFormatter)
 logger.addHandler(syslog_handler)
 
-syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False, show_name=False, show_severity=False)
+syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
+                                                  show_name=False, show_severity=False)
 syserr_handler.setLevel(logging.WARNING)
 logger.addHandler(syserr_handler)
 
@@ -97,7 +98,8 @@ m = hashlib.md5()
 for arg in args.args:
     m.update(str.encode(arg))
 
-hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() + "." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args)))
+hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() + "." +
+                        re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args)))
 
 logger.debug("Hashfile for this command: " + hashfile)
 
@@ -118,7 +120,8 @@ logger.debug("Error is " + str(error))
 logger.debug("Returncode is " + str(my_process.returncode))
 
 if timeout or my_process.returncode > 0 or (not error == b''):
-    errorInfo = "Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " + str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error)
+    errorInfo = ("Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
+                 str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error))
     if os.path.isfile(hashfile):
         if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
             logger.info("Still within time delta; ignoring: " + errorInfo)
@@ -132,6 +135,7 @@ else:
         sys.stdout.buffer.write(output)
 
     logger.debug("Succeeded - writing output to " + hashfile)
-    jsonObject = { 'output': str(output), 'error': str(error), 'returncode': my_process.returncode, 'lastsuccessfulrun': str(datetime.now()) }
+    jsonObject = {'output': str(output), 'error': str(error), 'returncode': my_process.returncode,
+                  'lastsuccessfulrun': str(datetime.now())}
     with open(hashfile, 'w') as fp:
         json.dump(jsonObject, fp, indent=4)
