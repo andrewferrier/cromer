@@ -67,6 +67,9 @@ parser.add_argument('-t', '--timeout', dest='timeout', type=parse_time_interval,
 
 parser.add_argument('-q', '--quiet-stdout', dest='quiet_stdout', action='store_true', default=False)
 
+parser.add_argument('-s', '--always-copy-to-syslog', dest='always_syslog', action='store_true', default=False,
+                    help="Always copy output of command to syslog, even if command succeeds.")
+
 parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval,
                     default=600, help="The maximum interval allowed for failures before cromer will 'pass through' the " +
                     "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s.")
@@ -134,6 +137,11 @@ if timeout or my_process.returncode > 0 or (not error == b''):
 else:
     if not args.quiet_stdout:
         sys.stdout.buffer.write(output)
+
+    if args.always_syslog:
+        # It is not necessary to do this in the error cases above, because the
+        # stdout information is included in errorInfo anyway.
+        logger.info("Stdout (because of always_syslog): " + str(output))
 
     logger.debug("Succeeded - writing output to " + hashfile)
     jsonObject = {'output': str(output), 'error': str(error), 'returncode': my_process.returncode,
