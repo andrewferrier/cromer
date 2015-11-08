@@ -1,5 +1,6 @@
 TEMPDIR := $(shell mktemp -t tmp.XXXXXX -d)
 FLAKE8 := $(shell which flake8)
+PYLINT := $(shell which pylint3 || which pylint)
 
 determineversion:
 	$(eval GITDESCRIBE := $(shell git describe --dirty))
@@ -18,4 +19,4 @@ builddeb: determineversion
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
 	/usr/bin/env python3 $(FLAKE8) --max-line-length=132 cromer .
-	pylint --report=n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer
+	$(PYLINT) --report=n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer
