@@ -75,7 +75,7 @@ parser.add_argument('-s', '--always-copy-to-syslog', dest='always_syslog', actio
                     help="Always copy output of command to syslog, even if command succeeds.")
 
 parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval,
-                    default=600, help="The maximum interval allowed for failures before cromer will 'pass through' the " +
+                    default=600, help="The maximum interval allowed for failures before cromer will 'pass through' the "
                     "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s.")
 
 parser.add_argument('args', nargs=argparse.REMAINDER)
