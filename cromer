@@ -43,7 +43,7 @@ else:
 
 syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
 syslog_handler.setLevel(logging.INFO)
-sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message)s')
+sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
 syslog_handler.setFormatter(sysLogFormatter)
 logger.addHandler(syslog_handler)
 
