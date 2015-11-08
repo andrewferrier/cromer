@@ -115,40 +115,40 @@ timeout = False
 
 try:
     my_process = Popen(args.args, stdin=None, stdout=PIPE, stderr=PIPE)
-    output, error = my_process.communicate(timeout=args.timeout.total_seconds())
+    stdout, stderr = my_process.communicate(timeout=args.timeout.total_seconds())
     my_process.wait()
 except TimeoutExpired:
     my_process.kill()
-    output, error = my_process.communicate()
+    stdout, stderr = my_process.communicate()
     logger.debug("Timeout of " + str(args.timeout) + " hit")
     timeout = True
 
-logger.debug("Output is " + str(output))
-logger.debug("Error is " + str(error))
+logger.debug("Stdout is " + str(stdout))
+logger.debug("Stderr is " + str(stderr))
 logger.debug("Returncode is " + str(my_process.returncode))
 
-if timeout or my_process.returncode > 0 or (not error == b''):
-    errorInfo = ("Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
-                 str(my_process.returncode) + "\nSTDOUT:\n" + str(output) + "\nSTDERR:\n" + str(error))
+if timeout or my_process.returncode > 0 or (not stderr == b''):
+    command_summary_info = ("Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
+                 str(my_process.returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
     if os.path.isfile(hashfile):
         if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
-            logger.info("Still within time delta; ignoring: " + errorInfo)
+            logger.info("Still within time delta; ignoring: " + command_summary_info)
         else:
-            logger.error("Time delta exceeded, failed:  " + errorInfo)
+            logger.error("Time delta exceeded, failed:  " + command_summary_info)
     else:
-        logger.error("Hashfile missing, failed: " + errorInfo)
+        logger.error("Hashfile missing, failed: " + command_summary_info)
 
 else:
     if not args.quiet_stdout:
-        sys.stdout.buffer.write(output)
+        sys.stdout.buffer.write(stdout)
 
     if args.always_syslog:
         # It is not necessary to do this in the error cases above, because the
-        # stdout information is included in errorInfo anyway.
-        logger.info("Stdout (because of always_syslog): " + str(output))
+        # stdout information is included in command_summary_info anyway.
+        logger.info("Stdout (because of always_syslog): " + str(stdout))
 
-    logger.debug("Succeeded - writing output to " + hashfile)
-    jsonObject = {'output': str(output), 'error': str(error), 'returncode': my_process.returncode,
+    logger.debug("Succeeded - writing to " + hashfile)
+    jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': my_process.returncode,
                   'lastsuccessfulrun': str(datetime.now())}
     with open(hashfile, 'w') as fp:
         json.dump(jsonObject, fp, indent=4)
