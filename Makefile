@@ -12,6 +12,8 @@ builddeb: determineversion
 	mkdir -p $(TEMPDIR)/usr/bin
 	mkdir -p $(TEMPDIR)/usr/share/doc/cromer
 	cp cromer $(TEMPDIR)/usr/bin
+	cp README* $(TEMPDIR)/usr/share/doc/email2pdf
+	cp LICENSE* $(TEMPDIR)/usr/share/doc/email2pdf
 	fakeroot chmod -R u=rwX,go=rX $(TEMPDIR)
 	fakeroot chmod -R u+x $(TEMPDIR)/usr/bin
 	fakeroot dpkg-deb --build $(TEMPDIR) .
