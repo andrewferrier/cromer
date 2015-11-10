@@ -136,8 +136,10 @@ if timeout or my_process.returncode > 0 or (not stderr == b''):
             logger.info("Still within time delta; ignoring: " + command_summary_info)
         else:
             logger.error("Time delta exceeded, failed:  " + command_summary_info)
+            sys.exit(101)
     else:
         logger.error("Hashfile missing, failed: " + command_summary_info)
+        sys.exit(102)
 
 else:
     if not args.quiet_stdout:
