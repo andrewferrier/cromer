@@ -22,3 +22,6 @@ analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
 	/usr/bin/env python3 $(FLAKE8) --max-line-length=132 cromer .
 	$(PYLINT) --report=n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer
+
+unittest:
+	python3 -m unittest discover
