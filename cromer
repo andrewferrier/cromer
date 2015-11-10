@@ -12,6 +12,7 @@ import logging
 import logging.handlers
 import os
 import re
+import stat
 import sys
 import time
 
@@ -150,5 +151,5 @@ else:
     logger.debug("Succeeded - writing to " + hashfile)
     jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': my_process.returncode,
                   'lastsuccessfulrun': str(datetime.now())}
-    with open(hashfile, 'w') as fp:
+    with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
         json.dump(jsonObject, fp, indent=4)
