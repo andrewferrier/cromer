@@ -21,3 +21,11 @@ class TestBasic(CromerTestCase):
         self.assertEqual(completed.returncode, 0)
         completed = self.runAsSubProcess('-X 1s -t 2s sleep 3')
         self.assertEqual(completed.returncode, 101)
+
+    def test_zerotimeout(self):
+        completed = self.runAsSubProcess('-X 0s sleep 2')
+        self.assertEqual(completed.returncode, 0)
+
+    def test_zero_defaulttimeout(self):
+        completed = self.runAsSubProcess('sleep 2')
+        self.assertEqual(completed.returncode, 0)
