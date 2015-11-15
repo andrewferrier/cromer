@@ -25,3 +25,6 @@ analysis:
 
 unittest:
 	python3 -m unittest discover
+
+unittest_verbose:
+	python3 -m unittest discover -f -v
