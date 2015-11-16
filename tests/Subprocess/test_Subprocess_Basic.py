@@ -104,3 +104,17 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.stdout, b'')
             self.assertRegex(completed.stderr, b'(?i)max interval')
             self.assertEqual(completed.returncode, 101)
+
+    def test_maxinterval_readable(self):
+        with self.createMockSubprocessFile() as filename:
+            self.createMockSubprocessContent(filename)
+            completed = self.runAsSubProcess('-r ' + filename)
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(completed.stdout, b'')
+            self.assertEqual(completed.stderr, b'')
+            self.createMockSubprocessContent(filename, stdout=True)
+            time.sleep(1)
+            completed = self.runAsSubProcess('-r ' + filename)
+            self.assertEqual(completed.stdout, b'')
+            self.assertRegex(completed.stderr, b'(?i)max interval')
+            self.assertEqual(completed.returncode, 101)

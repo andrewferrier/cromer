@@ -61,11 +61,6 @@ being executed into syslog, and there is no way to disable that. This behavior
 will be changed in future - see [this
 bug](https://github.com/andrewferrier/cromer/issues/12).
 
-At the moment, any sensitive information in the command line will be included
-in the hashfile name, most likely in a human-readable form. This behavior will
-be changed in future - see [this
-bug](https://github.com/andrewferrier/cromer/issues/13).
-
 # Hacking
 
 `cromer` is still in early development, and I would like to make it more

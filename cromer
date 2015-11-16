@@ -73,6 +73,12 @@ parser.add_argument('-v', '--verbose', action='count', default=0,
                     help="make the output more verbose. this affects both the output logged to "
                     "syslog, as well as output to the console. using this twice makes it doubly verbose.")
 
+parser.add_argument('-r', '--readable-hashfile-name', dest="readable_hashfile_name", action='store_true', default=False,
+                    help="Add a readable 'compressed' version of the command "
+                    "plus its arguments to the hashfile name. Can have security "
+                    "implications if the arguments contain sensitive "
+                    "information, so defaults to off.")
+
 parser.add_argument('-q', '--stdout-not-an-error', dest='quiet_stdout', action='store_true', default=False,
                     help="Normally stdout is considered an 'error' condition also, following the Unix principle of "
                     "'no output indicates success'. With this flag, stdout output from the command should not be "
@@ -109,8 +115,8 @@ m = hashlib.md5()
 for arg in args.args:
     m.update(str.encode(arg))
 
-hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() + "." +
-                        re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args)))
+hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() +
+                        (("." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args))) if args.readable_hashfile_name else ''))
 
 logger.debug("Hashfile for this command: " + hashfile)
 
