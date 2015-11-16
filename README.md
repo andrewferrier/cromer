@@ -15,8 +15,9 @@ e.g.:
 
     cromer -X 1d ping some.remote.host
 
-It provides a variety of command-line options and features, and more can be
-found by invoking `cromer --help`. However, the main command-line options are:
+It provides a variety of command-line options and features, and more
+information can be found by invoking `cromer --help`. However, the main
+command-line options are:
 
 * `-X` - the original motivation for writing cromer. This can be set to any
   time period in weeks, days, hours, minutes, or seconds (e.g. `-X5w7m`).
@@ -24,25 +25,17 @@ found by invoking `cromer --help`. However, the main command-line options are:
   failures within that time period by swallowing the command's return code and
   stderr, as long as the command succeeds again before the time period
   expires. State is kept by using a file of the form
-  `~/.cromer.xyz123.pingsomeremotehost`, where part after the second dot is an
-  MD5 hash of the complete command name (including options), and after the
-  third dot is a 'compressed' readable version of the same. This option
-  effectively enables cron jobs to bet set on a regular, fairly short timer
-  (e.g. every hour), but occasional failures to be *ignored* - as long as the
-  job generally passes. Currently there is no way to disable `-X`, but you can
-  set it to a very long time period (see [this
-  issue](https://github.com/andrewferrier/cromer/issues/11)).
+  `~/.cromer.xyz123.pingsomeremotehost`, where the part after the second dot
+  is an MD5 hash of the complete command name (including options), and after
+  the third dot is a 'compressed' readable version of the same (this latter
+  part is only added when the `-r` option is used). This option effectively
+  enables cron jobs to bet set on a regular, fairly short timer (e.g. every
+  hour), but occasional failures to be *ignored* - as long as the job
+  generally passes.
 
 * `-t` - very similar to the Unix command
   [timeout](http://man7.org/linux/man-pages/man1/timeout.1.html). However, the
-  timeout is expressed using the same syntax as for `-X` above. Currently
-  there is no way to disable `-t`, but you can set it to a very long time
-  period (see [this
-  issue](https://github.com/andrewferrier/cromer/issues/11)).
-
-* `-q` - Always suppress stdout output from the command.
-
-* `-s` - Always pipe the stdout from the command into syslog.
+  timeout is expressed using the same syntax as for `-X` above.
 
 # Installing
 
