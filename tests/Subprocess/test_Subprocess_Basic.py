@@ -29,3 +29,8 @@ class TestBasic(CromerTestCase):
     def test_zero_defaulttimeout(self):
         completed = self.runAsSubProcess('sleep 2')
         self.assertEqual(completed.returncode, 0)
+
+    def test_basicmocksubprocess(self):
+        with self.createMockSubprocessFile() as filename:
+            self.createMockSubprocessContent(filename)
+            completed = self.runAsSubProcess(filename)
