@@ -59,8 +59,9 @@ coloredlogs.install(level=logging.DEBUG)
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval,
-                    default='600s', help="The maximum interval allowed for failures before cromer will 'pass through' the "
-                    "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s.",
+                    default='0s', help="The maximum interval allowed for failures before cromer will 'pass through' the "
+                    "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s. Defaults to "
+                    "zero - i.e. any failure will pass through.",
                     metavar="TIME_INTERVAL")
 
 parser.add_argument('-t', '--timeout', dest='timeout', type=parse_time_interval, default='0s',
