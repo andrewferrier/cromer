@@ -1,18 +1,27 @@
 from tests.BaseTestClasses import CromerTestCase
 
+import time
+
 
 class TestBasic(CromerTestCase):
     def setUp(self):
         super(TestBasic, self).setUp()
 
-    def test_simple(self):
-        completed = self.runAsSubProcess('-X 1s -t 2s echo "Hello"')
-        self.assertRegex(completed.stdout, b'Hello')
+    def test_simple_true(self):
+        completed = self.runAsSubProcess('-X 1s true')
+        self.assertEqual(completed.stdout, b'')
         self.assertEqual(completed.stderr, b'')
         self.assertEqual(completed.returncode, 0)
 
-    def test_nohashfile(self):
+    def test_simple_true_quieten(self):
+        completed = self.runAsSubProcess('-X 1s -q echo "Hello"')
+        self.assertEqual(completed.stdout, b'')
+        self.assertEqual(completed.stderr, b'')
+        self.assertEqual(completed.returncode, 0)
+
+    def test_simple_false(self):
         completed = self.runAsSubProcess('-X 1s false')
+        self.assertEqual(completed.stdout, b'')
         self.assertRegex(completed.stderr, b'(?i)hashfile missing')
         self.assertEqual(completed.returncode, 102)
 
