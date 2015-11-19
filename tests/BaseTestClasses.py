@@ -5,8 +5,9 @@ import tempfile
 import unittest
 
 from contextlib import contextmanager
-from stat import *
-from subprocess import Popen, PIPE
+from stat import S_IRUSR, S_IWUSR, S_IXUSR
+from subprocess import PIPE
+
 
 class CromerTestCase(unittest.TestCase):
     COMMAND = os.path.normpath(os.path.join(os.getcwd(), 'cromer'))
