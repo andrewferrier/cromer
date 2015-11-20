@@ -48,7 +48,7 @@ class TestBasic(CromerTestCase):
     def test_basicmocksubprocess(self):
         with self.createMockSubprocessFile() as filename:
             self.createMockSubprocessContent(filename)
-            completed = self.runAsSubProcess(filename)
+            self.runAsSubProcess(filename)
 
     def test_maxinterval_stdout(self):
         with self.createMockSubprocessFile() as filename:
