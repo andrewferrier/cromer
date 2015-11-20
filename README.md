@@ -47,13 +47,6 @@ buildprereqs` target from
 [This should be improved in
 future](https://github.com/andrewferrier/cromer/issues/15).
 
-# Security
-
-At the moment, `cromer` will often put sensitive information about the command
-being executed into syslog, and there is no way to disable that. This behavior
-will be changed in future - see [this
-bug](https://github.com/andrewferrier/cromer/issues/12).
-
 # Hacking
 
 `cromer` is still in early development, and I would like to make it more

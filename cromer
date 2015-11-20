@@ -31,30 +31,47 @@ def parse_time_interval(time_str):
     return timedelta(**time_params)
 
 
-logger = logging.getLogger('cromer')
-logger.propagate = False
-logger.setLevel(logging.DEBUG)
+def setup_logging(enable_syslog, verbose):
+    logger = logging.getLogger('cromer')
+    logger.propagate = False
+    logger.setLevel(logging.DEBUG)
 
-if _platform == "linux" or _platform == "linux2":
-    sysLogAddress = '/dev/log'
-elif _platform == "darwin":
-    sysLogAddress = '/var/run/syslog'
-else:
-    print("Unsupported platform.")
-    sys.exit(3)
+    if enable_syslog:
+        if _platform == "linux" or _platform == "linux2":
+            sysLogAddress = '/dev/log'
+        elif _platform == "darwin":
+            sysLogAddress = '/var/run/syslog'
+        else:
+            print("Unsupported platform.")
+            sys.exit(3)
 
-syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
-syslog_handler.setLevel(logging.INFO)
-sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
-syslog_handler.setFormatter(sysLogFormatter)
-logger.addHandler(syslog_handler)
+        syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
+        syslog_handler.setLevel(logging.INFO)
+        sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
+        syslog_handler.setFormatter(sysLogFormatter)
+        logger.addHandler(syslog_handler)
 
-syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
-                                                  show_name=False, show_severity=False)
-syserr_handler.setLevel(logging.WARNING)
-logger.addHandler(syserr_handler)
+        if verbose > 1:
+            syslog_handler.setLevel(logging.DEBUG)
+        elif verbose == 1:
+            syslog_handler.setLevel(logging.DEBUG)
+        else:
+            syslog_handler.setLevel(logging.INFO)
 
-coloredlogs.install(level=logging.DEBUG)
+    syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
+                                                      show_name=False, show_severity=False)
+    syserr_handler.setLevel(logging.WARNING)
+    logger.addHandler(syserr_handler)
+
+    coloredlogs.install(level=logging.DEBUG)
+
+    if verbose > 1:
+        syserr_handler.setLevel(logging.DEBUG)
+    elif verbose == 1:
+        syserr_handler.setLevel(logging.INFO)
+    else:
+        syserr_handler.setLevel(logging.WARNING)
+
 
 parser = argparse.ArgumentParser()
 
@@ -82,32 +99,22 @@ parser.add_argument('-r', '--readable-hashfile-name', dest="readable_hashfile_na
                     "information, so defaults to off.")
 
 parser.add_argument('-q', '--stdout-not-an-error', dest='quiet_stdout', action='store_true', default=False,
-                    help="Normally stdout is considered an 'error' condition also, following the Unix principle of "
-                    "'no output indicates success'. With this flag, stdout output from the command should not be "
+                    help="Normally stdout from the command is considered an 'error' condition also, following the Unix "
+                    "principle of 'no output indicates success'. With this flag, stdout output from the command should not be "
                     "considered an error and is instead swallowed.")
 
-parser.add_argument('-s', '--always-copy-to-syslog', dest='always_syslog', action='store_true', default=False,
-                    help="Always copy output of command to syslog, even if command succeeds.")
+parser.add_argument('-l', '--enable-syslog', dest='enable_syslog', action='store_true', default=False,
+                    help="By default, cromer won't log anything to syslog, for security reasons. If you set this flag, "
+                    "it will log information about the cromer job to syslog (even if the job succeeds). Also passing -v "
+                    "once or twice will log even more detailed information.")
 
 parser.add_argument('args', nargs=argparse.REMAINDER, help="The command (and arguments) you want cromer to execute for you.")
 
 args = parser.parse_args()
 
-if syslog_handler:
-    if args.verbose > 1:
-        syslog_handler.setLevel(logging.DEBUG)
-    elif args.verbose == 1:
-        syslog_handler.setLevel(logging.DEBUG)
-    else:
-        syslog_handler.setLevel(logging.INFO)
+setup_logging(args.enable_syslog, args.verbose)
 
-if syserr_handler:
-    if args.verbose > 1:
-        syserr_handler.setLevel(logging.DEBUG)
-    elif args.verbose == 1:
-        syserr_handler.setLevel(logging.INFO)
-    else:
-        syserr_handler.setLevel(logging.WARNING)
+logger = logging.getLogger('cromer')
 
 logger.debug("Arguments are: " + str(args))
 
@@ -155,7 +162,7 @@ if timeout or my_process.returncode > 0 or (not stderr == b'') or (not stdout ==
         sys.exit(102)
 
 else:
-    if args.always_syslog:
+    if args.enable_syslog:
         # It is not necessary to do this in the error cases above, because the
         # stdout information is included in command_summary_info anyway.
         logger.info("Stdout (because of always_syslog): " + str(stdout))
