@@ -31,6 +31,12 @@ class TestBasic(CromerTestCase):
         self.assertRegex(completed.stderr, b'(?i)hashfile missing')
         self.assertEqual(completed.returncode, 102)
 
+    def test_noargs(self):
+        completed = self.runAsSubProcess('')
+        self.assertEqual(completed.stdout, b'')
+        self.assertRegex(completed.stderr, b'(?i)you must provide')
+        self.assertEqual(completed.returncode, 103)
+
     def test_timeout(self):
         completed = self.runAsSubProcess('sleep 2')
         self.assertEqual(completed.returncode, 0)

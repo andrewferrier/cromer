@@ -134,7 +134,9 @@ logger = logging.getLogger('cromer')
 
 logger.debug("Arguments are: " + str(args))
 
-assert len(args.args) > 0
+if not len(args.args) > 0:
+    logger.error("You must provide some arguments for cromer to run a process. Please run cromer --help for more information.")
+    sys.exit(103)
 
 m = hashlib.md5()
 for arg in args.args:
