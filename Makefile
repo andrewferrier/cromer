@@ -1,12 +1,20 @@
 TEMPDIR := $(shell mktemp -t tmp.XXXXXX -d)
 FLAKE8 := $(shell which flake8)
 PYLINT := $(shell which pylint3 || which pylint)
+UNAME := $(shell uname)
+DOCKERTAG = andrewferrier/cromer
 
 determineversion:
 	$(eval GITDESCRIBE := $(shell git describe --dirty))
 	sed 's/Version: .*/Version: $(GITDESCRIBE)/' debian/DEBIAN/control_template > debian/DEBIAN/control
 
-builddeb: determineversion
+ifeq ($(UNAME),Linux)
+builddeb: determineversion builddeb_real
+else
+builddeb: rundocker_getdebs
+endif
+
+builddeb_real:
 	sudo apt-get install build-essential
 	cp -R debian/DEBIAN/ $(TEMPDIR)
 	mkdir -p $(TEMPDIR)/usr/bin
@@ -17,6 +25,13 @@ builddeb: determineversion
 	fakeroot chmod -R u=rwX,go=rX $(TEMPDIR)
 	fakeroot chmod -R u+x $(TEMPDIR)/usr/bin
 	fakeroot dpkg-deb --build $(TEMPDIR) .
+
+builddocker: determineversion
+	docker build -t $(DOCKERTAG) .
+	docker tag -f $(DOCKERTAG):latest $(DOCKERTAG):$(GITDESCRIBE)
+
+rundocker_testing: builddocker
+	docker run --rm -t $(DOCKERTAG) bash -c 'cd /tmp/cromer && make unittest && make analysis'
 
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
