@@ -73,44 +73,50 @@ def setup_logging(enable_syslog, verbose):
         syserr_handler.setLevel(logging.WARNING)
 
 
-parser = argparse.ArgumentParser()
+def parse_arguments():
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval,
-                    default='0s', help="The maximum interval allowed for failures before cromer will 'pass through' the "
-                    "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s. Defaults to "
-                    "zero - i.e. any failure will pass through.",
-                    metavar="TIME_INTERVAL")
+    parser.add_argument('-X', '--max-interval-between-success', dest='max_interval_between_success', type=parse_time_interval,
+                        default='0s', help="The maximum interval allowed for failures before cromer will 'pass through' the "
+                        "stderr information to cron, allowing it to email. Expressed like the pattern 3w2d5h7m8s. Defaults to "
+                        "zero - i.e. any failure will pass through.",
+                        metavar="TIME_INTERVAL")
 
-parser.add_argument('-t', '--timeout', dest='timeout', type=parse_time_interval, default='0s',
-                    help="Timeout the command after this time and consider it to have failed as if it had "
-                    "produced stderr content or a non-zero return code. Parses time intervals in the same way as -X. "
-                    "Defaults to infinite - no timeout.", metavar="TIME_INTERVAL")
+    parser.add_argument('-t', '--timeout', dest='timeout', type=parse_time_interval, default='0s',
+                        help="Timeout the command after this time and consider it to have failed as if it had "
+                        "produced stderr content or a non-zero return code. Parses time intervals in the same way as -X. "
+                        "Defaults to infinite - no timeout.", metavar="TIME_INTERVAL")
 
-parser.add_argument('-v', '--verbose', action='count', default=0,
-                    help="Make the output more verbose. this affects both the output logged to "
-                    "syslog, as well as output to the console. using this twice makes it doubly verbose. This is primarily "
-                    "useful for debugging, and will break cromer as a cron wrapping tool, as it will output to stderr when "
-                    "otherwise inappropriate.")
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+                        help="Make the output more verbose. this affects both the output logged to "
+                        "syslog, as well as output to the console. using this twice makes it doubly verbose. This is primarily "
+                        "useful for debugging, and will break cromer as a cron wrapping tool, as it will output to stderr when "
+                        "otherwise inappropriate.")
 
-parser.add_argument('-r', '--readable-hashfile-name', dest="readable_hashfile_name", action='store_true', default=False,
-                    help="Add a readable 'compressed' version of the command "
-                    "plus its arguments to the hashfile name. Can have security "
-                    "implications if the arguments contain sensitive "
-                    "information, so defaults to off.")
+    parser.add_argument('-r', '--readable-hashfile-name', dest="readable_hashfile_name", action='store_true', default=False,
+                        help="Add a readable 'compressed' version of the command "
+                        "plus its arguments to the hashfile name. Can have security "
+                        "implications if the arguments contain sensitive "
+                        "information, so defaults to off.")
 
-parser.add_argument('-q', '--stdout-not-an-error', dest='quiet_stdout', action='store_true', default=False,
-                    help="Normally stdout from the command is considered an 'error' condition also, following the Unix "
-                    "principle of 'no output indicates success'. With this flag, stdout output from the command should not be "
-                    "considered an error and is instead swallowed.")
+    parser.add_argument('-q', '--stdout-not-an-error', dest='quiet_stdout', action='store_true', default=False,
+                        help="Normally stdout from the command is considered an 'error' condition also, following the Unix "
+                        "principle of 'no output indicates success'. With this flag, stdout output from the command should not be "
+                        "considered an error and is instead swallowed.")
 
-parser.add_argument('-l', '--enable-syslog', dest='enable_syslog', action='store_true', default=False,
-                    help="By default, cromer won't log anything to syslog, for security reasons. If you set this flag, "
-                    "it will log information about the cromer job to syslog (even if the job succeeds). Also passing -v "
-                    "once or twice will log even more detailed information.")
+    parser.add_argument('-l', '--enable-syslog', dest='enable_syslog', action='store_true', default=False,
+                        help="By default, cromer won't log anything to syslog, for security reasons. If you set this flag, "
+                        "it will log information about the cromer job to syslog (even if the job succeeds). Also passing -v "
+                        "once or twice will log even more detailed information.")
 
-parser.add_argument('args', nargs=argparse.REMAINDER, help="The command (and arguments) you want cromer to execute for you.")
+    parser.add_argument('args', nargs=argparse.REMAINDER, help="The command (and arguments) you want cromer to execute for you.")
 
-args = parser.parse_args()
+    args = parser.parse_args()
+
+    return args
+
+
+args = parse_arguments()
 
 setup_logging(args.enable_syslog, args.verbose)
 
