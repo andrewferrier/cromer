@@ -37,15 +37,20 @@ command-line options are:
   [timeout](http://man7.org/linux/man-pages/man1/timeout.1.html). However, the
   timeout is expressed using the same syntax as for `-X` above.
 
+# Pre-requisites
+
+This script requires a standard Python 3 installation. It hasn't been tested
+on anything lower than Python 3.4.
+
 # Installing
 
 You can build a Debian package by executing `make builddeb`. More information
 to come later. The only non-standard Python module used in `cromer` is
-`coloredlogs`, and you can build a Debian package for that by using the `make
-buildprereqs` target from
-[normalize-filename](https://github.com/andrewferrier/normalize-filename/blob/master/Makefile).
-[This should be improved in
-future](https://github.com/andrewferrier/cromer/issues/15).
+`coloredlogs`, and that's optional. If you wish, I have support in my sister
+project
+[normalize-filename](https://github.com/andrewferrier/normalize-filename/blob/master/Makefile)
+for building this - you can build a Debian package for `coloredlogs` by using
+its `make buildprereqs` target.
 
 # Hacking
 

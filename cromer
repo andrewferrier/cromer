@@ -5,8 +5,8 @@ from sys import platform as _platform
 from subprocess import Popen, PIPE, TimeoutExpired
 import argparse
 import calendar
-import coloredlogs
 import hashlib
+import importlib
 import json
 import logging
 import logging.handlers
@@ -45,25 +45,32 @@ def setup_logging(enable_syslog, verbose):
             print("Unsupported platform.")
             sys.exit(3)
 
-        syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
-        syslog_handler.setLevel(logging.INFO)
-        sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
-        syslog_handler.setFormatter(sysLogFormatter)
-        logger.addHandler(syslog_handler)
-
-        if verbose > 1:
-            syslog_handler.setLevel(logging.DEBUG)
-        elif verbose == 1:
-            syslog_handler.setLevel(logging.DEBUG)
-        else:
+        if sysLogAddress and os.path.exists(sysLogAddress):
+            syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
             syslog_handler.setLevel(logging.INFO)
+            sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
+            syslog_handler.setFormatter(sysLogFormatter)
+            logger.addHandler(syslog_handler)
 
-    syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
-                                                      show_name=False, show_severity=False)
+            if verbose > 1:
+                syslog_handler.setLevel(logging.DEBUG)
+            elif verbose == 1:
+                syslog_handler.setLevel(logging.DEBUG)
+            else:
+                syslog_handler.setLevel(logging.INFO)
+
+    try:
+        coloredlogs = importlib.import_module("coloredlogs")
+        syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
+                                                          show_name=False, show_severity=False)
+        coloredlogs.install(level=logging.DEBUG)
+        colored_logs_failed = False
+    except ImportError:
+        syserr_handler = logging.StreamHandler(stream=sys.stderr)
+        colored_logs_failed = True
+
     syserr_handler.setLevel(logging.WARNING)
     logger.addHandler(syserr_handler)
-
-    coloredlogs.install(level=logging.DEBUG)
 
     if verbose > 1:
         syserr_handler.setLevel(logging.DEBUG)
@@ -71,6 +78,9 @@ def setup_logging(enable_syslog, verbose):
         syserr_handler.setLevel(logging.INFO)
     else:
         syserr_handler.setLevel(logging.WARNING)
+
+    if colored_logs_failed:
+        logger.info("Couldn't set up coloredlogs")
 
 
 def parse_arguments():
