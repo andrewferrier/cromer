@@ -31,9 +31,13 @@ class CromerTestCase(unittest.TestCase):
 
     @contextmanager
     def createMockSubprocessFile(self, stdout=False, stderr=False, returncode=0):
-        (fp, name) = tempfile.mkstemp(suffix='.sh', dir=self.fake_user_dir)
-        yield name
-        os.remove(name)
+        # In one sense this is "insecure" - however it really isn't an issue
+        # in this case - the directory being used is used only for this
+        # testing and is wiped at the end of a test run.
+        f = tempfile.NamedTemporaryFile(delete=False, suffix='.sh', dir=self.fake_user_dir)
+        f.close()
+        yield f.name
+        os.remove(f.name)
 
     def createMockSubprocessContent(self, filename, stdout=False, stderr=False, returncode=0):
         with open(filename, 'w') as fp:
