@@ -3,7 +3,8 @@ MAINTAINER Andrew Ferrier <andrew.ferrier@example.com>
 RUN apt-get update && apt-get install -y \
         build-essential \
         git \
-        gdebi-core
+        gdebi-core \
+        python3-flake8
 WORKDIR /tmp
 COPY . /tmp/cromer/
 WORKDIR /tmp/cromer
