@@ -133,17 +133,30 @@ def parse_arguments():
 def run_process(args, my_timeout):
     timeout = False
 
-    try:
-        my_process = Popen(args, stdin=None, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = my_process.communicate(timeout=my_timeout)
-        my_process.wait()
-    except TimeoutExpired:
-        my_process.kill()
-        stdout, stderr = my_process.communicate()
-        logger.debug("Timeout of " + str(my_timeout) + " hit")
-        timeout = True
+    with Popen(args, stdin=None, stdout=PIPE, stderr=PIPE) as my_process:
+        stdout = None
+        stderr = None
+        try:
+            stdout, stderr = my_process.communicate(timeout=my_timeout)
+            my_process.wait()
+        except TimeoutExpired:
+            try:
+                stdout_new = my_process.stdout.read()
+                stderr_new = my_process.stderr.read()
+                my_process.kill()
+                logger.info("Timeout of " + str(my_timeout) + " hit")
+                stdout = stdout_new
+                stderr = stderr_new
+            except ValueError:
+                stdout = "INVALID STDOUT because process died, original stdout: " + str(stdout)
+                stderr = "INVALID STDERR because process died, original stderr: " + str(stderr)
+                my_process.kill()
+                logger.info("Timeout of " + str(my_timeout) + " hit, couldn't read stdout or stderr")
 
-    return (stdout, stderr, my_process.returncode, timeout)
+            timeout = True
+
+        return (stdout, stderr, my_process.returncode, timeout)
+
 
 args = parse_arguments()
 
