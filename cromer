@@ -126,6 +126,21 @@ def parse_arguments():
     return args
 
 
+def run_process(args, my_timeout):
+    timeout = False
+
+    try:
+        my_process = Popen(args, stdin=None, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = my_process.communicate(timeout=my_timeout)
+        my_process.wait()
+    except TimeoutExpired:
+        my_process.kill()
+        stdout, stderr = my_process.communicate()
+        logger.debug("Timeout of " + str(my_timeout) + " hit")
+        timeout = True
+
+    return (stdout, stderr, my_process.returncode, timeout)
+
 args = parse_arguments()
 
 setup_logging(args.enable_syslog, args.verbose)
@@ -147,28 +162,18 @@ hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() +
 
 logger.debug("Hashfile for this command: " + hashfile)
 
-timeout = False
-
 my_timeout = args.timeout.total_seconds()
 my_timeout = my_timeout if my_timeout > 0 else None
 
-try:
-    my_process = Popen(args.args, stdin=None, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = my_process.communicate(timeout=my_timeout)
-    my_process.wait()
-except TimeoutExpired:
-    my_process.kill()
-    stdout, stderr = my_process.communicate()
-    logger.debug("Timeout of " + str(args.timeout) + " hit")
-    timeout = True
+(stdout, stderr, returncode, timeout) = run_process(args.args, my_timeout)
 
 logger.debug("Stdout is " + str(stdout))
 logger.debug("Stderr is " + str(stderr))
-logger.debug("Returncode is " + str(my_process.returncode))
+logger.debug("Returncode is " + str(returncode))
 
-if timeout or my_process.returncode > 0 or (not stderr == b'') or (not stdout == b'' and not args.quiet_stdout):
+if timeout or returncode > 0 or (not stderr == b'') or (not stdout == b'' and not args.quiet_stdout):
     command_summary_info = ("Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
-                            str(my_process.returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
+                            str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
     if os.path.isfile(hashfile):
         if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
             logger.info("Still within time delta; ignoring: " + command_summary_info)
@@ -186,7 +191,7 @@ else:
         logger.info("Stdout (because of always_syslog): " + str(stdout))
 
     logger.debug("Succeeded - writing to " + hashfile)
-    jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': my_process.returncode,
+    jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
                   'lastsuccessfulrun': str(datetime.now())}
     with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
         json.dump(jsonObject, fp, indent=4)
