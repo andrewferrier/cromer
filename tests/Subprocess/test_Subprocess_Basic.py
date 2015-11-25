@@ -43,6 +43,11 @@ class TestBasic(CromerTestCase):
         completed = self.runAsSubProcess('-t 1s sleep 2')
         self.assertEqual(completed.returncode, 101)
 
+    def test_timeout_junk(self):
+        completed = self.runAsSubProcess('-t blah sleep 2')
+        self.assertRegex(completed.stderr, b'(?i)time interval must be of type')
+        self.assertEqual(completed.returncode, 2)
+
     def test_zerotimeout(self):
         completed = self.runAsSubProcess('-t 0s sleep 1')
         self.assertEqual(completed.returncode, 0)

@@ -21,8 +21,9 @@ def parse_time_interval(time_str):
     # pylint: disable=W0142
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
     parts = regex.match(time_str)
-    if not parts:
-        return
+    if not parts or parts.lastindex is None:
+        raise argparse.ArgumentTypeError("Time interval must be of type 3w2d5h6m7s "
+                                         "(each section is optional, but one must be present)")
     parts = parts.groupdict()
     time_params = {}
     for (name, param) in parts.items():
