@@ -31,33 +31,37 @@ def parse_time_interval(time_str):
     return timedelta(**time_params)
 
 
+def setup_syslog_logging(logger, verbose):
+    if _platform == "linux" or _platform == "linux2":
+        syslog_address = '/dev/log'
+    elif _platform == "darwin":
+        syslog_address = '/var/run/syslog'
+    else:
+        print("Unsupported platform.")
+        sys.exit(3)
+
+    if syslog_address and os.path.exists(syslog_address):
+        syslog_handler = logging.handlers.SysLogHandler(address=syslog_address)
+        syslog_handler.setLevel(logging.INFO)
+        syslog_formatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
+        syslog_handler.setFormatter(syslog_formatter)
+        logger.addHandler(syslog_handler)
+
+        if verbose > 1:
+            syslog_handler.setLevel(logging.DEBUG)
+        elif verbose == 1:
+            syslog_handler.setLevel(logging.DEBUG)
+        else:
+            syslog_handler.setLevel(logging.INFO)
+
+
 def setup_logging(enable_syslog, verbose):
     logger = logging.getLogger('cromer')
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
 
     if enable_syslog:
-        if _platform == "linux" or _platform == "linux2":
-            sysLogAddress = '/dev/log'
-        elif _platform == "darwin":
-            sysLogAddress = '/var/run/syslog'
-        else:
-            print("Unsupported platform.")
-            sys.exit(3)
-
-        if sysLogAddress and os.path.exists(sysLogAddress):
-            syslog_handler = logging.handlers.SysLogHandler(address=sysLogAddress)
-            syslog_handler.setLevel(logging.INFO)
-            sysLogFormatter = logging.Formatter('%(pathname)s[%(process)d] %(levelname)s %(lineno)d %(message).1900s')
-            syslog_handler.setFormatter(sysLogFormatter)
-            logger.addHandler(syslog_handler)
-
-            if verbose > 1:
-                syslog_handler.setLevel(logging.DEBUG)
-            elif verbose == 1:
-                syslog_handler.setLevel(logging.DEBUG)
-            else:
-                syslog_handler.setLevel(logging.INFO)
+        setup_syslog_logging(logger, verbose)
 
     try:
         coloredlogs = importlib.import_module("coloredlogs")
