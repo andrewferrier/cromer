@@ -18,7 +18,6 @@ import time
 
 
 def parse_time_interval(time_str):
-    # pylint: disable=W0142
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
     parts = regex.match(time_str)
     if not parts or parts.lastindex is None:
@@ -150,7 +149,7 @@ logger = logging.getLogger('cromer')
 
 logger.debug("Arguments are: " + str(args))
 
-if not len(args.args) > 0:
+if len(args.args) <= 0:
     logger.error("You must provide some arguments for cromer to run a process. Please run cromer --help for more information.")
     sys.exit(103)
 
@@ -172,7 +171,7 @@ logger.debug("Stdout is " + str(stdout))
 logger.debug("Stderr is " + str(stderr))
 logger.debug("Returncode is " + str(returncode))
 
-if timeout or returncode > 0 or (not stderr == b'') or (not stdout == b'' and not args.quiet_stdout):
+if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
     command_summary_info = ("Command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
                             str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
     if os.path.isfile(hashfile):
