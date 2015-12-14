@@ -102,7 +102,7 @@ def parse_arguments():
                         "Defaults to infinite - no timeout.", metavar="TIME_INTERVAL")
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help="Make the output more verbose. this affects both the output logged to "
+                        help="Make the output more verbose. This affects both the output logged to "
                         "syslog, as well as output to the console. using this twice makes it doubly verbose. This is primarily "
                         "useful for debugging, and will break cromer as a cron wrapping tool, as it will output to stderr when "
                         "otherwise inappropriate.")
