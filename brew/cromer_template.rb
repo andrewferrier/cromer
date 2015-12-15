@@ -1,8 +1,8 @@
 class Cromer < Formula
   desc "Cromer"
   homepage "http://github.com/andrewferrier/cromer"
-  url "https://github.com/andrewferrier/cromer/archive/0.5.zip"
-  version "0.5"
+  url "https://github.com/andrewferrier/cromer/archive/X.Y.zip"
+  version "X.Y"
 
   def install
       bin.install "cromer"

@@ -9,6 +9,10 @@ determineversion:
 	$(eval GITDESCRIBE := $(shell git describe --dirty))
 	sed 's/Version: .*/Version: $(GITDESCRIBE)/' debian/DEBIAN/control_template > debian/DEBIAN/control
 
+determineversion_brew:
+	$(eval GITDESCRIBE := $(shell git describe --abbrev=0))
+	sed 's/X\.Y/$(GITDESCRIBE)/' brew/cromer_template.rb > brew/cromer.rb
+
 ifeq ($(UNAME),Linux)
 builddeb: determineversion builddeb_real
 else
@@ -30,10 +34,10 @@ builddeb_real:
 makebrewlinks:
 	ln -sf $(ROOT_DIR)/brew/cromer.rb /usr/local/Library/Formula
 
-installbrew: makebrewlinks
+installbrew: makebrewlinks determineversion_brew
 	brew install -f cromer
 
-reinstallbrew: makebrewlinks
+reinstallbrew: makebrewlinks determineversion_brew
 	brew reinstall cromer
 
 builddocker: determineversion
