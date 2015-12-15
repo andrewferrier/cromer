@@ -47,9 +47,7 @@ def setup_syslog_logging(logger, verbose):
         syslog_handler.setFormatter(syslog_formatter)
         logger.addHandler(syslog_handler)
 
-        if verbose > 1:
-            syslog_handler.setLevel(logging.DEBUG)
-        elif verbose == 1:
+        if verbose > 0:
             syslog_handler.setLevel(logging.DEBUG)
         else:
             syslog_handler.setLevel(logging.INFO)
