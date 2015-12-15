@@ -1,3 +1,4 @@
+ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 TEMPDIR := $(shell mktemp -t tmp.XXXXXX -d)
 FLAKE8 := $(shell which flake8)
 PYLINT := $(shell which pylint3 || which pylint)
@@ -25,6 +26,15 @@ builddeb_real:
 	fakeroot chmod -R u=rwX,go=rX $(TEMPDIR)
 	fakeroot chmod -R u+x $(TEMPDIR)/usr/bin
 	fakeroot dpkg-deb --build $(TEMPDIR) .
+
+makebrewlinks:
+	ln -sf $(ROOT_DIR)/brew/cromer.rb /usr/local/Library/Formula
+
+installbrew: makebrewlinks
+	brew install -f cromer
+
+reinstallbrew: makebrewlinks
+	brew reinstall cromer
 
 builddocker: determineversion
 	docker build -t $(DOCKERTAG) .
