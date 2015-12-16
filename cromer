@@ -156,6 +156,17 @@ def run_process(args, my_timeout):
         return (stdout, stderr, my_process.returncode, timeout)
 
 
+def determine_hashfile_name(args):
+    hash_calculator = hashlib.md5()
+    for arg in args.args:
+        hash_calculator.update(str.encode(arg))
+
+    hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + hash_calculator.hexdigest() +
+                            (("." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args))) if args.readable_hashfile_name else ''))
+
+    return hashfile
+
+
 args = parse_arguments()
 
 setup_logging(args.enable_syslog, args.verbose)
@@ -168,12 +179,7 @@ if len(args.args) <= 0:
     logger.error("You must provide some arguments for cromer to run a process. Please run cromer --help for more information.")
     sys.exit(103)
 
-m = hashlib.md5()
-for arg in args.args:
-    m.update(str.encode(arg))
-
-hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + m.hexdigest() +
-                        (("." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args))) if args.readable_hashfile_name else ''))
+hashfile = determine_hashfile_name(args)
 
 logger.debug("Hashfile for this command: " + hashfile)
 
