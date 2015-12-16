@@ -140,18 +140,19 @@ def run_process(args, my_timeout):
         except TimeoutExpired:
             try:
                 stdout_new = my_process.stdout.read()
-                stderr_new = my_process.stderr.read()
-                my_process.kill()
-                logger.info("Timeout of " + str(my_timeout) + " hit")
                 stdout = stdout_new
+            except ValueError:
+                stdout = "Couldn't read stdout because process died, original stdout: " + str(stdout)
+
+            try:
+                stderr_new = my_process.stderr.read()
                 stderr = stderr_new
             except ValueError:
-                stdout = "INVALID STDOUT because process died, original stdout: " + str(stdout)
-                stderr = "INVALID STDERR because process died, original stderr: " + str(stderr)
-                my_process.kill()
-                logger.info("Timeout of " + str(my_timeout) + " hit, couldn't read stdout or stderr")
+                stderr = "Couldn't read stderr because process died, original stderr: " + str(stderr)
 
+            logger.info("Timeout of " + str(my_timeout) + " hit")
             timeout = True
+            my_process.kill()
 
         return (stdout, stderr, my_process.returncode, timeout)
 
