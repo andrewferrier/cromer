@@ -1,5 +1,7 @@
 # Cromer
 
+![Travis CI Status](https://travis-ci.org/andrewferrier/cromer.svg?branch=master)
+
 Cromer is a utility that can be wrapped around any command, but is
 particularly useful for wrapping around a cron job, especially to subdue
 periodic failures.
