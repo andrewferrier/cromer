@@ -1,6 +1,6 @@
-from tests.BaseTestClasses import CromerTestCase
-
 import time
+
+from tests.BaseTestClasses import CromerTestCase
 
 
 class TestBasic(CromerTestCase):
