@@ -49,8 +49,8 @@ rundocker_testing: builddocker
 
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
-	-/usr/bin/env python3 $(FLAKE8) --max-line-length=132 cromer .
-	$(PYLINT) -r n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer
+	-/usr/bin/env python3 $(FLAKE8) --max-line-length=132 cromer tests/
+	$(PYLINT) -r n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer tests/
 
 unittest:
 	python3 -m unittest discover
