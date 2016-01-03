@@ -47,6 +47,9 @@ builddocker: determineversion
 rundocker_testing: builddocker
 	docker run --rm -t $(DOCKERTAG) bash -c 'cd /tmp/cromer && make unittest && make analysis'
 
+rundocker_getdebs: builddocker
+	docker run --rm -v ${PWD}:/debs $(DOCKERTAG) sh -c 'cp /tmp/*.deb /debs'
+
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
 	-/usr/bin/env python3 $(FLAKE8) --max-line-length=132 cromer tests/
