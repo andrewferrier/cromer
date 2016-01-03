@@ -41,8 +41,7 @@ command-line options are:
 
 # Pre-requisites
 
-This script requires a standard Python 3 installation. It hasn't been tested
-on anything lower than Python 3.4.
+This is supported and tested on Python 3.3+. It is unlikely to work on an earlier version.
 
 # Installing
 
