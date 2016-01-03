@@ -61,17 +61,18 @@ def setup_logging(enable_syslog, verbose):
     if enable_syslog:
         setup_syslog_logging(logger, verbose)
 
+    syserr_handler = logging.StreamHandler(stream=sys.stderr)
+    syserr_handler.setLevel(logging.WARNING)
+
     try:
         coloredlogs = importlib.import_module("coloredlogs")
-        syserr_handler = coloredlogs.ColoredStreamHandler(stream=sys.stderr, show_timestamps=False, show_hostname=False,
-                                                          show_name=False, show_severity=False)
-        coloredlogs.install(level=logging.DEBUG)
+        syserr_formatter = coloredlogs.ColoredFormatter('%(levelname)s: %(message)s')
         colored_logs_failed = False
     except ImportError:
-        syserr_handler = logging.StreamHandler(stream=sys.stderr)
+        syserr_formatter = logging.Formatter('%(levelname)s: %(message)s')
         colored_logs_failed = True
 
-    syserr_handler.setLevel(logging.WARNING)
+    syserr_handler.setFormatter(syserr_formatter)
     logger.addHandler(syserr_handler)
 
     if verbose > 1:
