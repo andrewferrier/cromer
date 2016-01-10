@@ -135,3 +135,41 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.stdout, b'')
             self.assertRegex(completed.stderr, b'(?i)max interval')
             self.assertEqual(completed.returncode, 101)
+
+    def test_lock(self):
+        with self.createMockSubprocessFile() as filename:
+            self.createMockSubprocessContent(filename, delay=4)
+            self.runAsSubProcess(filename, wait=True)
+            completed1 = self.runAsSubProcess(filename, wait=False)
+            # The sleep is necessary to ensure the lock is taken, otherwise
+            # sometimes the second process gets it first.
+            time.sleep(2)
+            completed2 = self.runAsSubProcess(filename, wait=True)
+            self.assertIsNone(completed1.poll())
+            self.assertEqual(completed2.stdout, b'')
+            self.assertRegex(completed2.stderr, b'(?i)already running')
+            self.assertEqual(completed2.returncode, 104)
+            completed1.wait()
+            self.assertEqual(completed1.returncode, 0)
+
+    def test_lock_and_restore(self):
+        with self.createMockSubprocessFile() as filename:
+            self.createMockSubprocessContent(filename, delay=4)
+            self.runAsSubProcess(filename, wait=True)
+            completed1 = self.runAsSubProcess(filename, wait=False)
+            # The sleep is necessary to ensure the lock is taken, otherwise
+            # sometimes the second process gets it first.
+            time.sleep(2)
+            completed2 = self.runAsSubProcess(filename, wait=True)
+            self.assertIsNone(completed1.poll())
+            time.sleep(3)
+            self.assertEqual(completed1.poll(), 0)
+            completed3 = self.runAsSubProcess(filename, wait=True)
+            self.assertEqual(completed2.stdout, b'')
+            self.assertRegex(completed2.stderr, b'(?i)already running')
+            self.assertEqual(completed2.returncode, 104)
+            self.assertEqual(completed3.stdout, b'')
+            self.assertEqual(completed3.stderr, b'')
+            self.assertEqual(completed3.returncode, 0)
+            completed1.wait()
+            self.assertEqual(completed1.returncode, 0)

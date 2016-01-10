@@ -14,7 +14,7 @@ class CromerTestCase(unittest.TestCase):
     def setUp(self):
         self.fake_user_dir = tempfile.mkdtemp(dir='/tmp')
 
-    def runAsSubProcess(self, args):
+    def runAsSubProcess(self, args, wait=True):
         class SubprocessRunPython35Simulator():
             def __init__(self, returncode, output, error):
                 self.returncode = returncode
@@ -23,11 +23,18 @@ class CromerTestCase(unittest.TestCase):
 
         my_env = os.environ.copy()
         my_env['HOME'] = self.fake_user_dir
-        my_process = subprocess.Popen(CromerTestCase.COMMAND + ' ' + args, shell=True,
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=my_env)
-        output, error = my_process.communicate()
-        my_process.wait()
-        return SubprocessRunPython35Simulator(my_process.returncode, output, error)
+        my_process = subprocess.Popen(CromerTestCase.COMMAND + ' ' + args,
+                                      shell=True,
+                                      stdout=(subprocess.PIPE if wait else subprocess.DEVNULL),
+                                      stderr=(subprocess.PIPE if wait else subprocess.DEVNULL),
+                                      env=my_env)
+
+        if wait:
+            output, error = my_process.communicate()
+            my_process.wait()
+            return SubprocessRunPython35Simulator(my_process.returncode, output, error)
+        else:
+            return my_process
 
     @contextmanager
     def createMockSubprocessFile(self):
@@ -39,13 +46,15 @@ class CromerTestCase(unittest.TestCase):
         yield file_h.name
         os.remove(file_h.name)
 
-    def createMockSubprocessContent(self, filename, stdout=False, stderr=False, returncode=0):
+    def createMockSubprocessContent(self, filename, stdout=False, stderr=False, returncode=0, delay=0):
         with open(filename, 'w') as fp:
             fp.write('#!/bin/sh\n')
             if stdout:
                 fp.write('echo "Stdout content"\n')
             if stderr:
                 fp.write('echo "Stderr content"\n')
+            if delay != 0:
+                fp.write('sleep ' + str(delay) + "\n")
             fp.write('exit ' + str(returncode) + "\n")
         os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
 

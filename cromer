@@ -15,6 +15,10 @@ import stat
 import sys
 import time
 
+import fasteners
+
+LOCKFILE_LOCATION = '/tmp'
+
 
 def parse_time_interval(time_str):
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -168,6 +172,48 @@ def determine_hashfile_name(args):
     return hashfile
 
 
+def determine_lockfile_name(hashfile):
+    return os.path.join(LOCKFILE_LOCATION, os.path.basename(hashfile + ".lock"))
+
+
+def consider_executing_command(args, hashfile):
+    logger = logging.getLogger('cromer')
+
+    my_timeout = args.timeout.total_seconds()
+    my_timeout = my_timeout if my_timeout > 0 else None
+
+    (stdout, stderr, returncode, timeout) = run_process(args.args, my_timeout)
+
+    logger.debug("Stdout is " + str(stdout))
+    logger.debug("Stderr is " + str(stderr))
+    logger.debug("Returncode is " + str(returncode))
+
+    if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
+        command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
+                                str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
+        if os.path.isfile(hashfile):
+            if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
+                logger.info("Failed; still within time delta, ignoring: " + command_summary_info)
+            else:
+                logger.error("Failed; max interval between success (-X) exceeded:  " + command_summary_info)
+                sys.exit(101)
+        else:
+            logger.error("Failed; hashfile missing: " + command_summary_info)
+            sys.exit(102)
+
+    else:
+        if args.enable_syslog:
+            # It is not necessary to do this in the error cases above, because the
+            # stdout information is included in command_summary_info anyway.
+            logger.info("Succeeded; stdout (because of always_syslog): " + str(stdout))
+
+        logger.debug("Succeeded - writing to " + hashfile)
+        jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
+                      'lastsuccessfulrun': str(datetime.now())}
+        with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
+            json.dump(jsonObject, fp, indent=4)
+
+
 args = parse_arguments()
 
 setup_logging(args.enable_syslog, args.verbose)
@@ -181,39 +227,16 @@ if len(args.args) <= 0:
     sys.exit(103)
 
 hashfile = determine_hashfile_name(args)
+lockfile = determine_lockfile_name(hashfile)
 
 logger.debug("Hashfile for this command: " + hashfile)
+logger.debug("Lockfile for this command: " + lockfile)
 
-my_timeout = args.timeout.total_seconds()
-my_timeout = my_timeout if my_timeout > 0 else None
-
-(stdout, stderr, returncode, timeout) = run_process(args.args, my_timeout)
-
-logger.debug("Stdout is " + str(stdout))
-logger.debug("Stderr is " + str(stderr))
-logger.debug("Returncode is " + str(returncode))
-
-if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
-    command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
-                            str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
-    if os.path.isfile(hashfile):
-        if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
-            logger.info("Failed; still within time delta, ignoring: " + command_summary_info)
-        else:
-            logger.error("Failed; max interval between success (-X) exceeded:  " + command_summary_info)
-            sys.exit(101)
-    else:
-        logger.error("Failed; hashfile missing: " + command_summary_info)
-        sys.exit(102)
-
+lock = fasteners.InterProcessLock(lockfile)
+gotten = lock.acquire(blocking=False)
+if gotten:
+    consider_executing_command(args, hashfile)
+    lock.release()
 else:
-    if args.enable_syslog:
-        # It is not necessary to do this in the error cases above, because the
-        # stdout information is included in command_summary_info anyway.
-        logger.info("Succeeded; stdout (because of always_syslog): " + str(stdout))
-
-    logger.debug("Succeeded - writing to " + hashfile)
-    jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
-                  'lastsuccessfulrun': str(datetime.now())}
-    with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
-        json.dump(jsonObject, fp, indent=4)
+    logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
+    sys.exit(104)
