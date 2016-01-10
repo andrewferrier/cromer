@@ -45,12 +45,16 @@ This is supported and tested on Python 3.3+. It is unlikely to work on an earlie
 
 # Installing
 
-You can build a Debian package by executing `make builddeb`. More information
-to come later. The only non-standard Python module used in `cromer` is
-`coloredlogs`, and that's optional. If you wish, I have support in my sister
-project
+You can build a Debian package by executing `make builddeb`.
+
+You need various Python modules installed as pre-requisites. If you aren't
+installing via the Debian package, you can install these the Python way with
+`pip3 install -r requirements.txt`.
+
+If you wish, I have support in my sister project
 [normalize-filename](https://github.com/andrewferrier/normalize-filename/blob/master/Makefile)
-for building this - you can build a Debian package for `coloredlogs` by using
+for building the `coloredlogs` module (which is optional, `cromer` will
+operate with it) - you can build a Debian package for `coloredlogs` by using
 its `make buildprereqs` target.
 
 # Hacking
