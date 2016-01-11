@@ -176,6 +176,10 @@ def determine_lockfile_name(hashfile):
     return os.path.join(LOCKFILE_LOCATION, os.path.basename(hashfile + ".lock"))
 
 
+def within_success_period(hashfile):
+    return (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds()
+
+
 def consider_executing_command(args, hashfile):
     logger = logging.getLogger('cromer')
 
@@ -192,7 +196,7 @@ def consider_executing_command(args, hashfile):
         command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
                                 str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
         if os.path.isfile(hashfile):
-            if (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds():
+            if within_success_period(hashfile):
                 logger.info("Failed; still within time delta, ignoring: " + command_summary_info)
             else:
                 logger.error("Failed; max interval between success (-X) exceeded:  " + command_summary_info)
@@ -238,5 +242,8 @@ if gotten:
     consider_executing_command(args, hashfile)
     lock.release()
 else:
-    logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
-    sys.exit(104)
+    if not (os.path.isfile(hashfile) and within_success_period(hashfile)):
+        logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
+        sys.exit(104)
+    else:
+        logger.debug("Could not get lockfile " + lockfile + ", but still within success period.")
