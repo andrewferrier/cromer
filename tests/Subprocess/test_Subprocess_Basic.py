@@ -173,3 +173,19 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed3.returncode, 0)
             completed1.wait()
             self.assertEqual(completed1.returncode, 0)
+
+    def test_lock_with_maxinterval(self):
+        with self.createMockSubprocessFile() as filename:
+            self.createMockSubprocessContent(filename, delay=4)
+            self.runAsSubProcess('-X 1m ' + filename, wait=True)
+            completed1 = self.runAsSubProcess('-X 1m ' + filename, wait=False)
+            # The sleep is necessary to ensure the lock is taken, otherwise
+            # sometimes the second process gets it first.
+            time.sleep(2)
+            completed2 = self.runAsSubProcess('-X 1m ' + filename, wait=True)
+            self.assertIsNone(completed1.poll())
+            self.assertEqual(completed2.stdout, b'')
+            self.assertEqual(completed2.stderr, b'')
+            self.assertEqual(completed2.returncode, 0)
+            completed1.wait()
+            self.assertEqual(completed1.returncode, 0)
