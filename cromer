@@ -207,7 +207,7 @@ def consider_executing_command(args, hashfile):
             # stdout information is included in command_summary_info anyway.
             logger.info("Succeeded; stdout (because of always_syslog): " + str(stdout))
 
-        logger.debug("Succeeded - writing to " + hashfile)
+        logger.info("Succeeded - updating hashfile " + hashfile)
         jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
                       'lastsuccessfulrun': str(datetime.now())}
         with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
