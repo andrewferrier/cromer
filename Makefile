@@ -56,7 +56,7 @@ analysis:
 	$(PYLINT) -r n --disable=line-too-long --disable=missing-docstring --disable=locally-disabled cromer tests/
 
 unittest:
-	python3 -m unittest discover
+	python3 -m unittest discover -s tests/
 
 unittest_verbose:
-	python3 -m unittest discover -f -v
+	python3 -m unittest discover -s tests/ -f -v
