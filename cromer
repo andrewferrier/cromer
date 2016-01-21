@@ -217,7 +217,7 @@ def consider_executing_command(args, hashfile):
         if args.enable_syslog:
             # It is not necessary to do this in the error cases above, because the
             # stdout information is included in command_summary_info anyway.
-            logger.info("Succeeded; stdout (because of always_syslog): " + str(stdout))
+            logger.info("Succeeded; stdout (because of enable_syslog): " + str(stdout))
 
         logger.info("Succeeded - updating hashfile " + hashfile)
         jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
