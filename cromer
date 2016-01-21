@@ -34,7 +34,7 @@ def parse_time_interval(time_str):
     return timedelta(**time_params)
 
 
-def setup_syslog_logging(logger, verbose):
+def setup_syslog_logging(logger, verbose, debug_syslog):
     if sys.platform == "linux" or sys.platform == "linux2":
         syslog_address = '/dev/log'
     elif sys.platform == "darwin":
@@ -50,19 +50,19 @@ def setup_syslog_logging(logger, verbose):
         syslog_handler.setFormatter(syslog_formatter)
         logger.addHandler(syslog_handler)
 
-        if verbose > 0:
+        if verbose > 0 or debug_syslog:
             syslog_handler.setLevel(logging.DEBUG)
         else:
             syslog_handler.setLevel(logging.INFO)
 
 
-def setup_logging(enable_syslog, verbose):
+def setup_logging(enable_syslog, debug_syslog, verbose):
     logger = logging.getLogger('cromer')
     logger.propagate = False
     logger.setLevel(logging.DEBUG)
 
     if enable_syslog:
-        setup_syslog_logging(logger, verbose)
+        setup_syslog_logging(logger, verbose, debug_syslog)
 
     syserr_handler = logging.StreamHandler(stream=sys.stderr)
     syserr_handler.setLevel(logging.WARNING)
@@ -125,9 +125,17 @@ def parse_arguments():
                         "it will log information about the cromer job to syslog (even if the job succeeds). Also passing -v "
                         "once or twice will log even more detailed information.")
 
+    parser.add_argument('-d', '--debug-syslog', dest='debug_syslog', action='store_true', default=False,
+                        help="This flag is the equivalent of setting '--verbose' twice, but *only* for syslog. In other words, it will "
+                        "force maximum syslog output, for debugging purposes, but won't affect syserr (unless that's otherwise "
+                        "affected by --verbose. Implies -l.")
+
     parser.add_argument('args', nargs=argparse.REMAINDER, help="The command (and arguments) you want cromer to execute for you.")
 
     args = parser.parse_args()
+
+    if args.enable_syslog:
+        args.debug_syslog = True
 
     return args
 
@@ -220,7 +228,7 @@ def consider_executing_command(args, hashfile):
 
 args = parse_arguments()
 
-setup_logging(args.enable_syslog, args.verbose)
+setup_logging(args.enable_syslog, args.debug_syslog, args.verbose)
 
 logger = logging.getLogger('cromer')
 
