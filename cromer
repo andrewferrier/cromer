@@ -148,8 +148,9 @@ def run_process(args, my_timeout):
         stderr = None
         try:
             stdout, stderr = my_process.communicate(timeout=my_timeout)
-            my_process.wait()
         except TimeoutExpired:
+            logger.info("Timeout of " + str(my_timeout) + " hit - prior to reading final streams")
+            my_process.kill()
             try:
                 stdout_new = my_process.stdout.read()
                 stdout = stdout_new
@@ -162,9 +163,8 @@ def run_process(args, my_timeout):
             except ValueError:
                 stderr = "Couldn't read stderr because process died, original stderr: " + str(stderr)
 
-            logger.info("Timeout of " + str(my_timeout) + " hit")
+            logger.info("Timeout of " + str(my_timeout) + " hit - after reading final streams")
             timeout = True
-            my_process.kill()
 
         return (stdout, stderr, my_process.returncode, timeout)
 
