@@ -205,12 +205,12 @@ def consider_executing_command(args, hashfile):
                                 str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
         if os.path.isfile(hashfile):
             if within_success_period(hashfile):
-                logger.info("Failed; still within time delta, ignoring: " + command_summary_info)
+                logger.info("Command failed or timed out; still within time delta, ignoring: " + command_summary_info)
             else:
-                logger.error("Failed; max interval between success (-X) exceeded:  " + command_summary_info)
+                logger.error("Command failed or timed out; max interval between success (-X) exceeded:  " + command_summary_info)
                 sys.exit(101)
         else:
-            logger.error("Failed; hashfile missing: " + command_summary_info)
+            logger.error("Command failed or timed out; hashfile missing: " + command_summary_info)
             sys.exit(102)
 
     else:
@@ -247,8 +247,10 @@ logger.debug("Lockfile for this command: " + lockfile)
 lock = fasteners.InterProcessLock(lockfile)
 gotten = lock.acquire(blocking=False)
 if gotten:
+    logger.debug("Lock " + lockfile + " acquired.")
     consider_executing_command(args, hashfile)
     lock.release()
+    logger.debug("Lock " + lockfile + " released.")
 else:
     if not (os.path.isfile(hashfile) and within_success_period(hashfile)):
         logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
