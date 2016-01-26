@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 
 from contextlib import contextmanager
@@ -57,6 +58,13 @@ class CromerTestCase(unittest.TestCase):
                 fp.write('sleep ' + str(delay) + "\n")
             fp.write('exit ' + str(returncode) + "\n")
         os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
+
+    def get_time_in_seconds(self):
+        return time.perf_counter()
+
+    def get_file_contents(self, filename):
+        with open(filename, "r") as myfile:
+            return myfile.read()
 
     def tearDown(self):
         shutil.rmtree(self.fake_user_dir)

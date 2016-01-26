@@ -9,13 +9,6 @@ class TestBasic(CromerTestCase):
     def setUp(self):
         super(TestBasic, self).setUp()
 
-    def get_time_in_seconds(self):
-        return time.perf_counter()
-
-    def get_file_contents(self, filename):
-        with open(filename, "r") as myfile:
-            return myfile.read()
-
     def test_simple_true(self):
         completed = self.runAsSubProcess('true')
         self.assertEqual(completed.stdout, b'')
