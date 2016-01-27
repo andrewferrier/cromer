@@ -66,11 +66,10 @@ You need various Python modules installed as pre-requisites. If you aren't
 installing via the Debian package, you can install these the Python way with
 `pip3 install -r requirements.txt`.
 
-If you wish, I have support in my sister project
-[normalize-filename](https://github.com/andrewferrier/normalize-filename/blob/master/Makefile)
-for building the `coloredlogs` module (which is optional, `cromer` will
-operate with it) - you can build a Debian package for `coloredlogs` by using
-its `make buildprereqs` target.
+`cromer` can optionally use the `coloredlogs` python module if it's present to
+make syserr-based logs more attractive. There is support in my sister project
+[python-deb](https://github.com/andrewferrier/python-deb) for building the
+`coloredlogs` module as a Debian package.
 
 # Hacking
 
