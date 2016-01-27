@@ -151,6 +151,7 @@ def run_process(args, my_timeout):
         except TimeoutExpired:
             logger.info("Timeout of " + str(my_timeout) + " hit - prior to reading final streams")
             my_process.kill()
+            logger.debug("Process killed")
             try:
                 stdout_new = my_process.stdout.read()
                 stdout = stdout_new
