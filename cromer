@@ -104,10 +104,10 @@ def parse_arguments():
                         "Defaults to infinite - no timeout.", metavar="TIME_INTERVAL")
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help="Make the output more verbose. This affects both the output logged to "
-                        "syslog, as well as output to the console. using this twice makes it doubly verbose. This is primarily "
-                        "useful for debugging, and will break cromer as a cron wrapping tool, as it will output to stderr when "
-                        "otherwise inappropriate.")
+                        help="Make the output more verbose. This affects both the output logged to syslog (if -l is also set), "
+                        "as well as output to the console. Using this twice makes it doubly verbose. This is primarily useful for "
+                        "debugging, and will break cromer as a cron wrapping tool, as it will output to stderr when otherwise "
+                        "inappropriate.")
 
     parser.add_argument('-r', '--readable-hashfile-name', dest="readable_hashfile_name", action='store_true', default=False,
                         help="Add a readable 'compressed' version of the command "
@@ -126,9 +126,9 @@ def parse_arguments():
                         "once or twice will log even more detailed information.")
 
     parser.add_argument('-d', '--debug-syslog', dest='debug_syslog', action='store_true', default=False,
-                        help="This flag is the equivalent of setting '--verbose' twice, but *only* for syslog. In other words, it will "
-                        "force maximum syslog output, for debugging purposes, but won't affect syserr (unless that's otherwise "
-                        "affected by --verbose. Implies -l.")
+                        help="This flag is the equivalent of setting '--verbose' twice, but *only* for syslog. In other words, "
+                        "it will force maximum syslog output, for debugging purposes, but won't affect syserr (unless that's "
+                        "otherwise affected by --verbose). Implies -l.")
 
     parser.add_argument('args', nargs=argparse.REMAINDER, help="The command (and arguments) you want cromer to execute for you.")
 
