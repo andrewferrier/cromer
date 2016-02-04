@@ -6,6 +6,8 @@ from tests.BaseTestClasses import CromerTestCase
 
 TIMEOUT_DELAY_IN_CROMER = 5
 
+TEST_ACCURACY_THRESHOLD = 0.4
+
 
 class TestBasic(CromerTestCase):
     def setUp(self):
@@ -46,10 +48,10 @@ class TestBasic(CromerTestCase):
         completed = self.runAsSubProcess('sleep 2')
         b = self.get_time_in_seconds()
         self.assertEqual(completed.returncode, 0)
-        self.assertAlmostEqual(a + 2, b, delta=0.5)
+        self.assertAlmostEqual(a + 2, b, delta=TEST_ACCURACY_THRESHOLD)
         completed = self.runAsSubProcess('-t 1s sleep 2')
         c = self.get_time_in_seconds()
-        self.assertAlmostEqual(b + 1, c, delta=0.5)
+        self.assertAlmostEqual(b + 1, c, delta=TEST_ACCURACY_THRESHOLD)
         self.assertEqual(completed.returncode, 101)
 
     def test_timeout_swallow_sigterm(self):
@@ -63,7 +65,7 @@ class TestBasic(CromerTestCase):
             a = self.get_time_in_seconds()
             completed = self.runAsSubProcess('-t 1s ' + filename)
             b = self.get_time_in_seconds()
-            self.assertAlmostEqual(a + 1 + TIMEOUT_DELAY_IN_CROMER, b, delta=0.5)
+            self.assertAlmostEqual(a + 1 + TIMEOUT_DELAY_IN_CROMER, b, delta=TEST_ACCURACY_THRESHOLD)
             self.assertEqual(completed.returncode, 101)
 
     def test_timeout_with_loop_command(self):
@@ -83,7 +85,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.stdout, b'')
             self.assertEqual(completed.stderr, b'')
             self.assertEqual(self.get_file_contents(named_file.name), "1231")
-            self.assertAlmostEqual(a + 2, b, delta=0.5)
+            self.assertAlmostEqual(a + 2, b, delta=TEST_ACCURACY_THRESHOLD)
 
     def test_timeout_junk(self):
         completed = self.runAsSubProcess('-t blah sleep 2')
@@ -94,14 +96,14 @@ class TestBasic(CromerTestCase):
         a = self.get_time_in_seconds()
         completed = self.runAsSubProcess('-t 0s sleep 1')
         b = self.get_time_in_seconds()
-        self.assertAlmostEqual(a + 1, b, delta=0.5)
+        self.assertAlmostEqual(a + 1, b, delta=TEST_ACCURACY_THRESHOLD)
         self.assertEqual(completed.returncode, 0)
 
     def test_zero_defaulttimeout(self):
         a = self.get_time_in_seconds()
         completed = self.runAsSubProcess('sleep 1')
         b = self.get_time_in_seconds()
-        self.assertAlmostEqual(a + 1, b, delta=0.5)
+        self.assertAlmostEqual(a + 1, b, delta=TEST_ACCURACY_THRESHOLD)
         self.assertEqual(completed.returncode, 0)
 
     def test_basicmocksubprocess(self):
