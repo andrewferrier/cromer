@@ -19,6 +19,9 @@ import fasteners
 
 LOCKFILE_LOCATION = '/tmp'
 
+DELAY_ITERATIONS = 50
+DELAY_STEP_LENGTH = 0.1
+
 
 def parse_time_interval(time_str):
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -149,9 +152,17 @@ def run_process(args, my_timeout):
         try:
             stdout, stderr = my_process.communicate(timeout=my_timeout)
         except TimeoutExpired:
-            logger.info("Timeout of " + str(my_timeout) + " hit - prior to reading final streams")
-            my_process.kill()
-            logger.debug("Process killed")
+            logger.info("Timeout of " + str(my_timeout) + " hit")
+            if my_process.poll() is None:
+                logger.debug("Process not completed - sending SIGTERM")
+                my_process.terminate()
+            delay(my_process)
+            if my_process.poll() is None:
+                logger.debug("Process not completed - sending SIGKILL")
+                my_process.kill()
+            delay(my_process)
+            assert(my_process.poll() is not None)
+            logger.debug("Process no longer running")
             try:
                 stdout_new = my_process.stdout.read()
                 stdout = stdout_new
@@ -164,10 +175,17 @@ def run_process(args, my_timeout):
             except ValueError:
                 stderr = "Couldn't read stderr because process died, original stderr: " + str(stderr)
 
-            logger.info("Timeout of " + str(my_timeout) + " hit - after reading final streams")
+            logger.debug("Timeout of " + str(my_timeout) + " hit - after reading final streams")
             timeout = True
 
         return (stdout, stderr, my_process.returncode, timeout)
+
+
+def delay(my_process):
+    for step in range(0, DELAY_ITERATIONS):
+        if my_process.poll() is not None:
+            break
+        time.sleep(DELAY_STEP_LENGTH)
 
 
 def determine_hashfile_name(args):

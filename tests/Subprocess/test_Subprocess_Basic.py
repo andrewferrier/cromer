@@ -4,6 +4,8 @@ import time
 from string import Template
 from tests.BaseTestClasses import CromerTestCase
 
+TIMEOUT_DELAY_IN_CROMER = 5
+
 
 class TestBasic(CromerTestCase):
     def setUp(self):
@@ -50,6 +52,20 @@ class TestBasic(CromerTestCase):
         self.assertAlmostEqual(b + 1, c, delta=0.5)
         self.assertEqual(completed.returncode, 101)
 
+    def test_timeout_swallow_sigterm(self):
+        with self.createMockFile(suffix='.py') as filename:
+            self.createMockSubprocessContent(filename)
+            completed = self.runAsSubProcess(filename)
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(completed.stdout, b'')
+            self.assertEqual(completed.stderr, b'')
+            self.createSwallowSigTerm(filename)
+            a = self.get_time_in_seconds()
+            completed = self.runAsSubProcess('-t 1s ' + filename)
+            b = self.get_time_in_seconds()
+            self.assertAlmostEqual(a + 1 + TIMEOUT_DELAY_IN_CROMER, b, delta=0.5)
+            self.assertEqual(completed.returncode, 101)
+
     def test_timeout_with_loop_command(self):
         LOOP_COMMAND = 'bash -c \'for i in `seq 1 3`; do sleep 1; echo -n $$i >> $outputfile; done\''
 
@@ -89,12 +105,12 @@ class TestBasic(CromerTestCase):
         self.assertEqual(completed.returncode, 0)
 
     def test_basicmocksubprocess(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             self.runAsSubProcess(filename)
 
     def test_maxinterval_stdout(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess(filename)
             self.assertEqual(completed.returncode, 0)
@@ -108,7 +124,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_maxinterval_stderr(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess(filename)
             self.assertEqual(completed.returncode, 0)
@@ -122,7 +138,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_maxinterval_returncode(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess(filename)
             self.assertEqual(completed.returncode, 0)
@@ -136,7 +152,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_maxinterval_explicit_returncode(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess('-X 4s ' + filename)
             self.assertEqual(completed.returncode, 0)
@@ -155,7 +171,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_maxinterval_readable(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess('-r ' + filename)
             self.assertEqual(completed.returncode, 0)
@@ -169,7 +185,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_lock(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename, delay=4)
             self.runAsSubProcess(filename, wait=True)
             completed1 = self.runAsSubProcess(filename, wait=False)
@@ -185,7 +201,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed1.returncode, 0)
 
     def test_lock_and_restore(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename, delay=4)
             self.runAsSubProcess(filename, wait=True)
             completed1 = self.runAsSubProcess(filename, wait=False)
@@ -207,7 +223,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed1.returncode, 0)
 
     def test_lock_with_maxinterval(self):
-        with self.createMockSubprocessFile() as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename, delay=4)
             self.runAsSubProcess('-X 1m ' + filename, wait=True)
             completed1 = self.runAsSubProcess('-X 1m ' + filename, wait=False)

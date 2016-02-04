@@ -38,11 +38,11 @@ class CromerTestCase(unittest.TestCase):
             return my_process
 
     @contextmanager
-    def createMockSubprocessFile(self):
+    def createMockFile(self, suffix='.sh'):
         # In one sense this is "insecure" - however it really isn't an issue
         # in this case - the directory being used is used only for this
         # testing and is wiped at the end of a test run.
-        file_h = tempfile.NamedTemporaryFile(delete=False, suffix='.sh', dir=self.fake_user_dir)
+        file_h = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=self.fake_user_dir)
         file_h.close()
         yield file_h.name
         os.remove(file_h.name)
@@ -57,6 +57,15 @@ class CromerTestCase(unittest.TestCase):
             if delay != 0:
                 fp.write('sleep ' + str(delay) + "\n")
             fp.write('exit ' + str(returncode) + "\n")
+        os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
+
+    def createSwallowSigTerm(self, filename):
+        with open(filename, 'w') as fp:
+            fp.write('#!/usr/bin/env python3\n')
+            fp.write('import signal\n')
+            fp.write('signal.signal(signal.SIGTERM, signal.SIG_IGN)\n')
+            fp.write('while True:\n')
+            fp.write('    pass\n')
         os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
 
     def get_time_in_seconds(self):
