@@ -35,3 +35,7 @@ before_install:
 script: make unittest
 install:
     - "pip install -r requirements.txt"
+notifications:
+    email:
+        recipients:
+            - secure: "J2ulzxrKyTi1ZL2p+CXfvWbNXSmMvkm9rzygUHLMM5NI6c1RpF7HT+nLUL5tBi9aNh8jLPRHpoNjY/ym6TYsYdTpgdetoUBaDOmYQintjOnv81BLOVkS5Ur1vskfEl+WNuGQ7caVO+yHVJuHraBDelIKkeHhE3JnJen4ymNmOnQo+6vDX1oGJPKlthh7A7Yexo9111WLlhKF+cACU2vwX0otnqPYbuOQsHnGVTWsJdPFHR8iU1CKc/nUtt8Pgd49Y0DLH0El1wevoh8sMpDslsjmEIWyVAYr0oowhEp7VcWt14X6gVKTWFVofio0ioxiMwoQJF7cuHIqeg9teAmPi2GlmxaJFhfH74/5QYe2cJhiQLFF6SyJX/fv1s/8DD48DODLDzDtxiG6+239uuBYCP+SVNbNeEmxV9MByaqCxDt+8/DWTDdx1in8VyBtN/12V4GhdJsHgG5pQ1YK6peiWSaRiZQ7UqMWPi2YP7Mir4CU4adZXhh2WHHOE/p3/vXF2iEh0g/ZUOm+ufHQOEAiVMrVTg/gOVYiwbp5sKFpQh2i3lMMUql8XPMT1nr+AH1UET3j68/eCwM2r78OexWNiR8DFeIvu2e+oJ41vF11b53B4aebR4inPTPmvzGfRir1X4cQcPq6/ir0a0EroBGxB8k1LcEMWJxBscf+5hvacpY="
