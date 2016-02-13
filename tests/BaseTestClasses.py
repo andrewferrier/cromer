@@ -7,6 +7,7 @@ import unittest
 
 from contextlib import contextmanager
 from stat import S_IRUSR, S_IWUSR, S_IXUSR
+from string import Template
 
 
 class CromerTestCase(unittest.TestCase):
@@ -66,6 +67,19 @@ class CromerTestCase(unittest.TestCase):
             fp.write('signal.signal(signal.SIGTERM, signal.SIG_IGN)\n')
             fp.write('while True:\n')
             fp.write('    pass\n')
+        os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
+
+    def createLoopCommand(self, filename, outputfilename=None):
+        LOOP_COMMAND = 'for i in `seq 1 3`; do sleep 1; echo -n $$i $outputfile; done'
+
+        if outputfilename:
+            loopCommandFinal = Template(LOOP_COMMAND).substitute({'outputfile': '>> ' + outputfilename})
+        else:
+            loopCommandFinal = Template(LOOP_COMMAND).substitute({'outputfile': ''})
+
+        with open(filename, 'w') as fp:
+            fp.write('#!/bin/bash\n')
+            fp.write(loopCommandFinal)
         os.chmod(filename, S_IRUSR | S_IWUSR | S_IXUSR)
 
     def get_time_in_seconds(self):

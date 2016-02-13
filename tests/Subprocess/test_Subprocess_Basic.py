@@ -1,7 +1,6 @@
 import tempfile
 import time
 
-from string import Template
 from tests.BaseTestClasses import CromerTestCase
 
 TIMEOUT_DELAY_IN_CROMER = 5
@@ -69,7 +68,22 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_timeout_with_loop_command(self):
-        LOOP_COMMAND = 'bash -c \'for i in `seq 1 3`; do sleep 1; echo -n $$i >> $outputfile; done\''
+        with self.createMockFile(suffix='.sh') as filename:
+            with tempfile.NamedTemporaryFile() as outputfile:
+                self.createLoopCommand(filename, outputfile.name)
+                completed = self.runAsSubProcess(filename)
+                self.assertEqual(completed.returncode, 0)
+                self.assertEqual(completed.stdout, b'')
+                self.assertEqual(completed.stderr, b'')
+                self.assertEqual(self.get_file_contents(outputfile.name), "123")
+                a = self.get_time_in_seconds()
+                completed = self.runAsSubProcess('-X 1m -t 2s ' + filename)
+                b = self.get_time_in_seconds()
+                self.assertEqual(completed.returncode, 0)
+                self.assertEqual(completed.stdout, b'')
+                self.assertEqual(completed.stderr, b'')
+                self.assertEqual(self.get_file_contents(outputfile.name), "1231")
+                self.assertAlmostEqual(a + 2, b, delta=TEST_ACCURACY_THRESHOLD)
 
         with tempfile.NamedTemporaryFile() as named_file:
             loopCommandFinal = Template(LOOP_COMMAND).substitute({'outputfile': named_file.name})
