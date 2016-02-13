@@ -18,6 +18,7 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then get_python_environment macports $TRAVIS_PYTHON_VERSION env/; fi
 script: make unittest
 install:
+    - "python3 --version"
     - "pip install -r requirements.txt"
 notifications:
     email:
