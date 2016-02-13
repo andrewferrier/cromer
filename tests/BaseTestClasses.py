@@ -54,7 +54,7 @@ class CromerTestCase(unittest.TestCase):
             if stdout:
                 fp.write('echo "Stdout content"\n')
             if stderr:
-                fp.write('echo "Stderr content"\n')
+                fp.write('>&2 echo "Stderr content"\n')
             if delay != 0:
                 fp.write('sleep ' + str(delay) + "\n")
             fp.write('exit ' + str(returncode) + "\n")
