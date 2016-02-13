@@ -5,28 +5,12 @@ matrix:
         - os: osx
           language: generic
           env:
-              - TOXENV=py33
-              - TRAVIS_PYTHON_VERSION=3.3
-          install:
-              - "pip3 install -r requirements.txt"
-        - os: osx
-          language: generic
-          env:
-              - TOXENV=py34
-              - TRAVIS_PYTHON_VERSION=3.4
-          install:
-              - "pip3 install -r requirements.txt"
-        - os: osx
-          language: generic
-          env:
               - TOXENV=py35
               - TRAVIS_PYTHON_VERSION=3.5
           install:
               - "pip3 install -r requirements.txt"
 language: python
 python:
-    - "3.3"
-    - "3.4"
     - "3.5"
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then git clone https://github.com/MacPython/terryfy; fi
