@@ -218,6 +218,7 @@ def consider_executing_command(args, hashfile):
     logger.debug("Stdout is " + str(stdout))
     logger.debug("Stderr is " + str(stderr))
     logger.debug("Returncode is " + str(returncode))
+    logger.debug("Command timed out: " + str(timeout))
 
     if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
         command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
