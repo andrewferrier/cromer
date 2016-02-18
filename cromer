@@ -24,9 +24,6 @@ import fasteners
 
 HASH_AND_LOCK_ROOT = os.path.join(os.path.expanduser("~"), ".cromer/")
 
-DELAY_ITERATIONS = 50
-DELAY_STEP_LENGTH = 0.1
-
 
 def parse_time_interval(time_str):
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
