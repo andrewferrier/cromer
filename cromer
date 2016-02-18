@@ -22,7 +22,7 @@ import time
 
 import fasteners
 
-LOCKFILE_LOCATION = '/tmp'
+HASH_AND_LOCK_ROOT = os.path.join(os.path.expanduser("~"), ".cromer/")
 
 DELAY_ITERATIONS = 50
 DELAY_STEP_LENGTH = 0.1
@@ -173,14 +173,14 @@ def determine_hashfile_name(args):
     for arg in args.args:
         hash_calculator.update(str.encode(arg))
 
-    hashfile = os.path.join(os.path.expanduser("~"), ".cromer." + hash_calculator.hexdigest() +
+    hashfile = os.path.join(HASH_AND_LOCK_ROOT, hash_calculator.hexdigest() +
                             (("." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args))) if args.readable_hashfile_name else ''))
 
     return hashfile
 
 
 def determine_lockfile_name(hashfile):
-    return os.path.join(LOCKFILE_LOCATION, os.path.basename(hashfile + ".lock"))
+    return os.path.join(HASH_AND_LOCK_ROOT, os.path.basename(hashfile + ".lock"))
 
 
 def within_success_period(hashfile):
