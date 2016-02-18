@@ -6,6 +6,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     print("This script requires a minimum Python version of 3.5.")
     sys.exit(1)
 
+# pylint: disable=wrong-import-position
 from datetime import datetime, timedelta
 import argparse
 import calendar
@@ -145,6 +146,22 @@ def parse_arguments():
     return args
 
 
+def setup_args_and_logging():
+    args = parse_arguments()
+
+    setup_logging(args.enable_syslog, args.debug_syslog, args.verbose)
+
+    logger = logging.getLogger('cromer')
+
+    logger.debug("Arguments are: " + str(args))
+
+    if len(args.args) <= 0:
+        logger.error("You must provide some arguments for cromer to run a process. Please run cromer --help for more information.")
+        sys.exit(103)
+
+    return args
+
+
 def run_process(args, my_timeout):
     try:
         completed_process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=my_timeout)
@@ -162,7 +179,8 @@ def run_process(args, my_timeout):
         #
         # This is not ideal - it appears this is probably a bug in Python.
 
-        return ("No stdout - unexpected ValueError in run_process()", "No stdout - unexpected ValueError in run_process()", -2, True)
+        return ("No stdout - unexpected ValueError in run_process()",
+                "No stderr - unexpected ValueError in run_process() - contents are " + str(error), -2, True)
 
 
 def determine_hashfile_name(args):
@@ -180,7 +198,7 @@ def determine_lockfile_name(hashfile):
     return os.path.join(HASH_AND_LOCK_ROOT, os.path.basename(hashfile + ".lock"))
 
 
-def within_success_period(hashfile):
+def within_success_period(args, hashfile):
     return (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds()
 
 
@@ -201,7 +219,7 @@ def consider_executing_command(args, hashfile):
         command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
                                 str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
         if os.path.isfile(hashfile):
-            if within_success_period(hashfile):
+            if within_success_period(args, hashfile):
                 logger.info("Command failed or timed out; still within time delta, ignoring: " + command_summary_info)
             else:
                 logger.error("Command failed or timed out; max interval between success (-X) exceeded:  " + command_summary_info)
@@ -217,40 +235,36 @@ def consider_executing_command(args, hashfile):
             logger.info("Succeeded; stdout (because of enable_syslog): " + str(stdout))
 
         logger.info("Succeeded - updating hashfile " + hashfile)
-        jsonObject = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
-                      'lastsuccessfulrun': str(datetime.now())}
-        with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as fp:
-            json.dump(jsonObject, fp, indent=4)
+        hashfile_contents = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
+                             'lastsuccessfulrun': str(datetime.now())}
+        with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as hashfile_fp:
+            json.dump(hashfile_contents, hashfile_fp, indent=4)
 
 
-args = parse_arguments()
+def main():
+    args = setup_args_and_logging()
 
-setup_logging(args.enable_syslog, args.debug_syslog, args.verbose)
+    logger = logging.getLogger('cromer')
 
-logger = logging.getLogger('cromer')
+    hashfile = determine_hashfile_name(args)
+    lockfile = determine_lockfile_name(hashfile)
 
-logger.debug("Arguments are: " + str(args))
+    logger.debug("Hashfile for this command: " + hashfile)
+    logger.debug("Lockfile for this command: " + lockfile)
 
-if len(args.args) <= 0:
-    logger.error("You must provide some arguments for cromer to run a process. Please run cromer --help for more information.")
-    sys.exit(103)
-
-hashfile = determine_hashfile_name(args)
-lockfile = determine_lockfile_name(hashfile)
-
-logger.debug("Hashfile for this command: " + hashfile)
-logger.debug("Lockfile for this command: " + lockfile)
-
-lock = fasteners.InterProcessLock(lockfile)
-gotten = lock.acquire(blocking=False)
-if gotten:
-    logger.debug("Lock " + lockfile + " acquired.")
-    consider_executing_command(args, hashfile)
-    lock.release()
-    logger.debug("Lock " + lockfile + " released.")
-else:
-    if not (os.path.isfile(hashfile) and within_success_period(hashfile)):
-        logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
-        sys.exit(104)
+    lock = fasteners.InterProcessLock(lockfile)
+    gotten = lock.acquire(blocking=False)
+    if gotten:
+        logger.debug("Lock " + lockfile + " acquired.")
+        consider_executing_command(args, hashfile)
+        lock.release()
+        logger.debug("Lock " + lockfile + " released.")
     else:
-        logger.debug("Could not get lockfile " + lockfile + ", but still within success period.")
+        if not (os.path.isfile(hashfile) and within_success_period(args, hashfile)):
+            logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
+            sys.exit(104)
+        else:
+            logger.debug("Could not get lockfile " + lockfile + ", but still within success period.")
+
+if __name__ == "__main__":
+    main()
