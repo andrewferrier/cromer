@@ -188,8 +188,9 @@ def determine_hashfile_name(args):
     for arg in args.args:
         hash_calculator.update(str.encode(arg))
 
-    hashfile = os.path.join(HASH_AND_LOCK_ROOT, hash_calculator.hexdigest() +
-                            (("." + re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args))) if args.readable_hashfile_name else ''))
+    hashfile = os.path.join(HASH_AND_LOCK_ROOT,
+                            ((re.sub('[^0-9a-zA-Z_]+', '', ''.join(args.args)) + ".") if args.readable_hashfile_name else '') +
+                            hash_calculator.hexdigest())
 
     return hashfile
 
