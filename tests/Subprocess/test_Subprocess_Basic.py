@@ -22,6 +22,12 @@ class TestBasic(CromerTestCase):
         self.assertEqual(completed.stderr, b'')
         self.assertEqual(completed.returncode, 0)
 
+    def test_simple_true_debug_syslogging(self):
+        completed = self.runAsSubProcess('-d true')
+        self.assertEqual(completed.stdout, b'')
+        self.assertEqual(completed.stderr, b'')
+        self.assertEqual(completed.returncode, 0)
+
     def test_simple_true_quieten(self):
         completed = self.runAsSubProcess('-q echo "Hello"')
         self.assertEqual(completed.stdout, b'')
