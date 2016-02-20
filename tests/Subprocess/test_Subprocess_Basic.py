@@ -1,3 +1,4 @@
+import os
 import tempfile
 import time
 
@@ -45,6 +46,18 @@ class TestBasic(CromerTestCase):
         self.assertEqual(completed.stdout, b'')
         self.assertRegex(completed.stderr, b'(?i)you must provide')
         self.assertEqual(completed.returncode, 103)
+
+    def test_pathenv(self):
+        with self.createMockFile() as filename:
+            self.createMockSubprocessContent(filename)
+            completed = self.runAsSubProcess(os.path.basename(filename), path_env=(os.environ['PATH'] + ":" + os.path.dirname(filename)))
+            self.assertEqual(completed.stdout, b'')
+            self.assertEqual(completed.stderr, b'')
+            self.assertEqual(completed.returncode, 0)
+            completed = self.runAsSubProcess(os.path.basename(filename))
+            self.assertEqual(completed.stdout, b'')
+            self.assertRegex(completed.stderr, b'No such file or directory')
+            self.assertEqual(completed.returncode, 1)
 
     def test_timeout(self):
         a = self.get_time_in_seconds()

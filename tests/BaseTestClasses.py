@@ -16,7 +16,7 @@ class CromerTestCase(unittest.TestCase):
     def setUp(self):
         self.fake_user_dir = tempfile.mkdtemp(dir='/tmp')
 
-    def runAsSubProcess(self, args, wait=True):
+    def runAsSubProcess(self, args, wait=True, path_env=None):
         class SubprocessRunPython35Simulator():
             def __init__(self, returncode, output, error):
                 self.returncode = returncode
@@ -25,6 +25,10 @@ class CromerTestCase(unittest.TestCase):
 
         my_env = os.environ.copy()
         my_env['HOME'] = self.fake_user_dir
+
+        if path_env is not None:
+            my_env['PATH'] = path_env
+
         my_process = subprocess.Popen(CromerTestCase.COMMAND + ' ' + args,
                                       shell=True,
                                       stdout=(subprocess.PIPE if wait else subprocess.DEVNULL),
