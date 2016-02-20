@@ -58,7 +58,7 @@ class TestBasic(CromerTestCase):
         self.assertEqual(completed.returncode, 101)
 
     def test_timeout_swallow_sigterm(self):
-        with self.createMockFile(suffix='.py') as filename:
+        with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
             completed = self.runAsSubProcess(filename)
             self.assertEqual(completed.returncode, 0)
@@ -72,7 +72,7 @@ class TestBasic(CromerTestCase):
             self.assertEqual(completed.returncode, 101)
 
     def test_timeout_with_loop_command(self):
-        with self.createMockFile(suffix='.sh') as filename:
+        with self.createMockFile() as filename:
             with tempfile.NamedTemporaryFile() as outputfile:
                 self.createLoopCommand(filename, outputfile.name)
                 completed = self.runAsSubProcess(filename)
@@ -90,7 +90,7 @@ class TestBasic(CromerTestCase):
                 self.assertAlmostEqual(a + 2, b, delta=TEST_ACCURACY_THRESHOLD)
 
     def test_timeout_with_loop_command_to_stdout(self):
-        with self.createMockFile(suffix='.sh') as filename:
+        with self.createMockFile() as filename:
             with tempfile.NamedTemporaryFile() as outputfile:
                 self.createLoopCommand(filename, outputfile.name)
                 completed = self.runAsSubProcess(filename)
