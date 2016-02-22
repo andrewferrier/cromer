@@ -8,6 +8,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
 
 # pylint: disable=wrong-import-position
 from datetime import datetime, timedelta
+from subprocess import Popen, TimeoutExpired, PIPE
 import argparse
 import calendar
 import hashlib
@@ -18,7 +19,6 @@ import logging.handlers
 import os
 import re
 import stat
-import subprocess
 import time
 
 import fasteners
@@ -163,24 +163,19 @@ def setup_args_and_logging():
 
 
 def run_process(args, my_timeout):
-    try:
-        completed_process = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=my_timeout)
-        return (completed_process.stdout, completed_process.stderr, completed_process.returncode, False)
-    except subprocess.TimeoutExpired as timeout:
-        return (timeout.stdout, timeout.stderr, -1, True)
-    except ValueError as error:
-        # This is extremely confusing, but from time to time (I've observed it
-        # particularly with rsync), subprocess.run just returns: ValueError:
-        # Invalid file object: <_io.BufferedReader name=6>
-        #
-        # This appears to only be in circumstances where it has timed
-        # out/failed. Therefore, this method works around that by passing back
-        # information to the caller to make it clear that its failed.
-        #
-        # This is not ideal - it appears this is probably a bug in Python.
-
-        return ("No stdout - unexpected ValueError in run_process()",
-                "No stderr - unexpected ValueError in run_process() - contents are " + str(error), -2, True)
+    with Popen(args, stdout=PIPE, stderr=PIPE) as process:
+        try:
+            stdout, stderr = process.communicate(timeout=my_timeout)
+        except TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            return (stdout, stderr, -1, True)
+        except:
+            process.kill()
+            process.wait()
+            raise
+        retcode = process.poll()
+    return (stdout, stderr, retcode, False)
 
 
 def determine_hashfile_name(args):
