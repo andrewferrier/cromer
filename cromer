@@ -1,12 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
-if sys.version_info[0] < 3 or sys.version_info[1] < 5:
-    print("This script requires a minimum Python version of 3.5.")
-    sys.exit(1)
-
-# pylint: disable=wrong-import-position
 from datetime import datetime, timedelta
 from subprocess import Popen, TimeoutExpired, PIPE
 import argparse
@@ -19,6 +12,8 @@ import logging.handlers
 import os
 import re
 import stat
+import subprocess
+import sys
 import time
 
 import fasteners
