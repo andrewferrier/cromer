@@ -240,7 +240,7 @@ def main():
     hashfile = determine_hashfile_name(args)
     lockfile = determine_lockfile_name(hashfile)
 
-    logger.debug("Hashfile for this command: " + hashfile)
+    logger.info("Hashfile for this command: " + hashfile)
     logger.debug("Lockfile for this command: " + lockfile)
 
     lock = fasteners.InterProcessLock(lockfile)
