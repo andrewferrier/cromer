@@ -190,7 +190,14 @@ def determine_lockfile_name(hashfile):
 
 
 def within_success_period(args, hashfile):
-    return (calendar.timegm(time.gmtime()) - os.path.getmtime(hashfile)) < args.max_interval_between_success.total_seconds()
+    logger = logging.getLogger('cromer')
+
+    current_time = time.time()
+    hashfile_time = os.path.getmtime(hashfile)
+
+    logger.debug("Current time is " + str(current_time))
+    logger.debug("Time on hashfile is " + str(hashfile_time))
+    return (current_time - hashfile_time) < args.max_interval_between_success.total_seconds()
 
 
 def consider_executing_command(args, hashfile):
