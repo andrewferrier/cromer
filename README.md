@@ -73,7 +73,4 @@ make syserr-based logs more attractive. There is support in my sister project
 
 # Hacking
 
-`cromer` is still in early development, and I would like to make it more
-robust and [add more unit
-tests](https://github.com/andrewferrier/cromer/issues/10). Any pull
-requests/issues welcome.
+Any pull requests/issues welcome.
