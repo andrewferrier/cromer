@@ -165,9 +165,18 @@ def run_process(args, my_timeout):
             process.kill()
             try:
                 stdout, stderr = process.communicate()
+                return (stdout, stderr, -1, True)
             except ValueError:
-                pass
-            return (stdout, stderr, -1, True)
+                # This is extremely confusing, but from time to time (I've observed it
+                # particularly with rsync), process.communicate() just returns: ValueError:
+                # Invalid file object: <_io.BufferedReader name=6>. It's not
+                # clear if this happens after every TimeoutExpired, but I
+                # don't think so. This method works around that by passing back
+                # information to the caller to make it clear that its failed.
+                #
+                # This is not ideal - it appears this is probably a bug in Python.
+
+                return ("No stdout - unexpected ValueError in run_process()", "No stderr - unexpected ValueError in run_process()", -2, True)
         except:
             process.kill()
             process.wait()
