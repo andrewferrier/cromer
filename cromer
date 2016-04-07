@@ -225,17 +225,19 @@ def consider_executing_command(args, hashfile):
     logger.debug("Returncode is " + str(returncode))
     logger.debug("Command timed out: " + str(timeout))
 
+    FAILED_MESSAGE = "Command failed, timed out or produced output without -q"
+
     if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
-        command_summary_info = ("command attempted " + ' '.join(args.args) + "\nRETURNCODE: " +
+        command_summary_info = ("\nCOMMAND ATTEMPTED: " + ' '.join(args.args) + "\nRETURNCODE: " +
                                 str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
         if os.path.isfile(hashfile):
             if within_success_period(args, hashfile):
-                logger.info("Command failed or timed out; still within time delta, ignoring: " + command_summary_info)
+                logger.info(FAILED_MESSAGE + "; still within time delta, ignoring: " + command_summary_info)
             else:
-                logger.error("Command failed or timed out; max interval between success (-X) exceeded:  " + command_summary_info)
+                logger.error(FAILED_MESSAGE + "; max interval between success (-X) exceeded:  " + command_summary_info)
                 sys.exit(101)
         else:
-            logger.error("Command failed or timed out; hashfile missing: " + command_summary_info)
+            logger.error(FAILED_MESSAGE + "; hashfile missing: " + command_summary_info)
             sys.exit(102)
 
     else:
