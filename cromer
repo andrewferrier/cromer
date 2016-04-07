@@ -163,7 +163,10 @@ def run_process(args, my_timeout):
             stdout, stderr = process.communicate(timeout=my_timeout)
         except TimeoutExpired:
             process.kill()
-            stdout, stderr = process.communicate()
+            try:
+                stdout, stderr = process.communicate()
+            except ValueError:
+                pass
             return (stdout, stderr, -1, True)
         except:
             process.kill()
