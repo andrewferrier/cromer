@@ -268,9 +268,11 @@ def main():
     gotten = lock.acquire(blocking=False)
     if gotten:
         logger.debug("Lock " + lockfile + " acquired.")
-        consider_executing_command(args, hashfile)
-        lock.release()
-        logger.debug("Lock " + lockfile + " released.")
+        try:
+            consider_executing_command(args, hashfile)
+        finally:
+            lock.release()
+            logger.debug("Lock " + lockfile + " released.")
     else:
         if not (os.path.isfile(hashfile) and within_success_period(args, hashfile)):
             logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
