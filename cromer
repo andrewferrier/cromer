@@ -225,19 +225,32 @@ def consider_executing_command(args, hashfile):
     logger.debug("Returncode is " + str(returncode))
     logger.debug("Command timed out: " + str(timeout))
 
-    FAILED_MESSAGE = "Command failed, timed out or produced output without -q"
+    failed = False
 
-    if timeout or returncode > 0 or stderr != b'' or (stdout != b'' and not args.quiet_stdout):
+    if timeout:
+        failedMessage = "Command timed out"
+        failed = True
+    elif returncode != 0:
+        failedMessage = "Return code greater than 0"
+        failed = True
+    elif stderr != b'':
+        failedMessage = "Command produced stderr"
+        failed = True
+    elif stdout != b'' and not args.quiet_stdout:
+        failedMessage = "Command produced stdout and -q not set"
+        failed = True
+
+    if failed:
         command_summary_info = ("\nCOMMAND ATTEMPTED: " + ' '.join(args.args) + "\nRETURNCODE: " +
                                 str(returncode) + "\nSTDOUT:\n" + str(stdout) + "\nSTDERR:\n" + str(stderr))
         if os.path.isfile(hashfile):
             if within_success_period(args, hashfile):
-                logger.info(FAILED_MESSAGE + "; still within time delta, ignoring: " + command_summary_info)
+                logger.info(failedMessage + "; still within time delta, ignoring: " + command_summary_info)
             else:
-                logger.error(FAILED_MESSAGE + "; max interval between success (-X) exceeded:  " + command_summary_info)
+                logger.error(failedMessage + "; max interval between success (-X) exceeded:  " + command_summary_info)
                 sys.exit(101)
         else:
-            logger.error(FAILED_MESSAGE + "; hashfile missing: " + command_summary_info)
+            logger.error(failedMessage + "; hashfile missing: " + command_summary_info)
             sys.exit(102)
 
     else:
