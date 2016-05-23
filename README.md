@@ -2,9 +2,11 @@
 
 [![Travis CI Status](https://travis-ci.org/andrewferrier/cromer.svg?branch=master)](https://travis-ci.org/andrewferrier/cromer)
 
-Cromer is a utility that can be wrapped around any command, but is
-particularly useful for wrapping around a cron job, especially to subdue
-periodic failures.
+Cromer is a utility that can be wrapped around any command, and subdues
+periodic/occasional failures at calling that exact same command. It maintains
+'hidden' state between invocations of the command to enable it to do this.
+It is typically and particularly useful for wrapping around a cron job,
+so the user isn't continually notified about commands that sometimes fail.
 
 Note that use is subject to the [license
 conditions](https://github.com/andrewferrier/cromer/blob/master/LICENSE.txt).
