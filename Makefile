@@ -3,7 +3,6 @@ TEMPDIR := $(shell mktemp -t tmp.XXXXXX -d)
 FLAKE8 := $(shell which flake8)
 PYLINT := $(shell which pylint3 || which pylint)
 UNAME := $(shell uname)
-DOCKERTAG = andrewferrier/cromer
 
 determineversion:
 	$(eval GITDESCRIBE := $(shell git describe --dirty))
@@ -13,13 +12,7 @@ determineversion_brew:
 	$(eval GITDESCRIBE := $(shell git describe --abbrev=0))
 	sed 's/X\.Y/$(GITDESCRIBE)/' brew/cromer_template.rb > brew/cromer.rb
 
-ifeq ($(UNAME),Linux)
-builddeb: determineversion builddeb_real
-else
-builddeb: rundocker_getdebs
-endif
-
-builddeb_real:
+builddeb: determineversion
 	sudo apt-get install build-essential
 	cp -R debian/DEBIAN/ $(TEMPDIR)
 	mkdir -p $(TEMPDIR)/usr/bin
@@ -39,16 +32,6 @@ installbrew: makebrewlinks determineversion_brew
 
 reinstallbrew: makebrewlinks determineversion_brew
 	brew reinstall cromer
-
-builddocker: determineversion
-	docker build -t $(DOCKERTAG) .
-	docker tag -f $(DOCKERTAG):latest $(DOCKERTAG):$(GITDESCRIBE)
-
-rundocker_testing: builddocker
-	docker run --rm -t $(DOCKERTAG) bash -c 'cd /tmp/cromer && make unittest && make analysis'
-
-rundocker_getdebs: builddocker
-	docker run --rm -v ${PWD}:/debs $(DOCKERTAG) sh -c 'cp /tmp/*.deb /debs'
 
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
