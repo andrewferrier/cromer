@@ -16,6 +16,8 @@ import time
 
 import fasteners
 
+assert sys.version_info >= (3,3)
+
 HASH_AND_LOCK_ROOT = os.path.join(os.path.expanduser("~"), ".cromer/")
 
 
