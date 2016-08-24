@@ -187,7 +187,7 @@ def run_process(args, my_timeout):
 
 
 def determine_hashfile_name(args):
-    hash_calculator = hashlib.md5()
+    hash_calculator = hashlib.sha1()
     for arg in args.args:
         hash_calculator.update(str.encode(arg))
 
