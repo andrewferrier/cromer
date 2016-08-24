@@ -47,7 +47,7 @@ def setup_syslog_logging(logger, verbose, debug_syslog):
     if syslog_address and os.path.exists(syslog_address):
         syslog_handler = logging.handlers.SysLogHandler(address=syslog_address)
         syslog_handler.setLevel(logging.INFO)
-        syslog_formatter = logging.Formatter('{pathname}[{process}] {levelname} {lineno} {message:.1900s}', style='{')
+        syslog_formatter = logging.Formatter('{pathname}[{process}]: {levelname} {lineno} {message:.1900s}', style='{')
         syslog_handler.setFormatter(syslog_formatter)
         logger.addHandler(syslog_handler)
 
