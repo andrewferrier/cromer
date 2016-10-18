@@ -45,7 +45,7 @@ command-line options are:
   period by swallowing the command's return code and stderr, as long as the
   command succeeds again before the time period expires. State is kept by
   using a file of the form `~/.cromer.xyz123.pingsomeremotehost`, where the
-  part after the second dot is an MD5 hash of the complete command name
+  part after the second dot is an SHA1 hash of the complete command name
   (including options), and after the third dot is a 'compressed' readable
   version of the same (this latter part is only added when the `-r` option is
   used). This option effectively enables cron jobs to bet set on a regular,
