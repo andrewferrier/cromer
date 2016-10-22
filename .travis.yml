@@ -3,6 +3,7 @@ os:
 matrix:
     include:
         - os: osx
+          osx_image: xcode6.4
           language: generic
           env:
               - TOXENV=py33
@@ -10,6 +11,7 @@ matrix:
           install:
               - "pip3 install -r requirements.txt"
         - os: osx
+          osx_image: xcode6.4
           language: generic
           env:
               - TOXENV=py34
@@ -17,6 +19,7 @@ matrix:
           install:
               - "pip3 install -r requirements.txt"
         - os: osx
+          osx_image: xcode6.4
           language: generic
           env:
               - TOXENV=py35
