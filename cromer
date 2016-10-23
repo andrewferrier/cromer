@@ -10,16 +10,18 @@ import logging
 import logging.handlers
 import os
 import re
+import signal
 import stat
 import sys
 import time
+
+from stat import S_IRUSR, S_IWUSR
 
 import fasteners
 
 assert sys.version_info >= (3,3)
 
 HASH_AND_LOCK_ROOT = os.path.join(os.path.expanduser("~"), ".cromer/")
-
 
 def parse_time_interval(time_str):
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')
@@ -32,7 +34,7 @@ def parse_time_interval(time_str):
     for (name, param) in parts.items():
         if param:
             time_params[name] = int(param)
-    return timedelta(**time_params)
+    return timedelta(**time_params).total_seconds()
 
 
 def setup_syslog_logging(logger, verbose, debug_syslog):
@@ -138,6 +140,9 @@ def parse_arguments():
     if args.debug_syslog:
         args.enable_syslog = True
 
+    if args.timeout <= 0:
+        args.timeout = None
+
     return args
 
 
@@ -158,10 +163,14 @@ def setup_args_and_logging():
 
 
 def run_process(args, my_timeout):
+    logger = logging.getLogger('cromer')
+
     with Popen(args, stdout=PIPE, stderr=PIPE) as process:
         try:
             stdout, stderr = process.communicate(timeout=my_timeout)
         except TimeoutExpired:
+            logger.debug("Timeout expired, attempting to terminate/kill.")
+            process.terminate()
             process.kill()
             try:
                 stdout, stderr = process.communicate()
@@ -179,7 +188,7 @@ def run_process(args, my_timeout):
                 return ("No stdout - unexpected ValueError in run_process()",
                         "No stderr - unexpected ValueError in run_process()", -2, True)
         except:
-            process.kill()
+            process.terminate()
             process.wait()
             raise
         retcode = process.poll()
@@ -202,6 +211,27 @@ def determine_lockfile_name(hashfile):
     return os.path.join(HASH_AND_LOCK_ROOT, os.path.basename(hashfile + ".lock"))
 
 
+def determine_pidfile_name(lockfile):
+    return os.path.join(HASH_AND_LOCK_ROOT, os.path.basename(lockfile + ".pid"))
+
+
+def write_pid(pidfile):
+    logger = logging.getLogger('cromer')
+
+    pid = os.getpid()
+
+    logger.debug("Writing PID " + str(pid) + " to PID file " + pidfile)
+
+    with open(pidfile, 'w') as lockfile_fp:
+        lockfile_fp.write(str(pid))
+    os.chmod(pidfile, S_IRUSR | S_IWUSR)
+
+
+def read_pid(lockfile):
+    with open(lockfile, 'r') as lockfile_fp:
+        return int(lockfile_fp.read())
+
+
 def within_success_period(args, hashfile):
     logger = logging.getLogger('cromer')
 
@@ -210,16 +240,56 @@ def within_success_period(args, hashfile):
 
     logger.debug("within_success_period(): Current time is " + str(current_time))
     logger.debug("within_success_period(): Time on hashfile is " + str(hashfile_time))
-    return (current_time - hashfile_time) < args.max_interval_between_success.total_seconds()
+    return (current_time - hashfile_time) < args.max_interval_between_success
+
+
+def within_timeout_period(args, pidfile):
+    logger = logging.getLogger('cromer')
+
+    current_time = time.time()
+    pidfile_time = os.path.getmtime(pidfile)
+
+    logger.info("within_timeout_period(): Current time is " + str(current_time))
+    logger.info("within_timeout_period(): Time on PID file is " + str(pidfile_time))
+
+    if args.timeout is None:
+        return True
+    else:
+        return (current_time - pidfile_time) < args.timeout
+
+
+def terminate_or_kill(pid):
+    logger = logging.getLogger('cromer')
+
+    try:
+        for x in range(0, 3):
+            logger.debug("Going to attempt to send SIGTERM to PID " + str(pid))
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(1)
+
+        for x in range(0, 3):
+            logger.debug("Going to attempt to send SIGKILL to PID " + str(pid))
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(1)
+
+        logger.error("Could not kill PID " + str(pid))
+        return False
+    except OSError:
+        logger.debug("PID " + str(pid) + " no longer running.")
+        return True
 
 
 def consider_executing_command(args, hashfile):
     logger = logging.getLogger('cromer')
 
-    my_timeout = args.timeout.total_seconds()
-    my_timeout = my_timeout if my_timeout > 0 else None
+    my_timeout = args.timeout
+    # my_timeout = my_timeout if my_timeout > 0 else None
+
+    logger.debug("About to execute command " + str(args.args) + " with timeout " + str(my_timeout) + " seconds")
 
     (stdout, stderr, returncode, timeout) = run_process(args.args, my_timeout)
+
+    logger.debug("Command execution complete.")
 
     logger.debug("Stdout is " + str(stdout))
     logger.debug("Stderr is " + str(stderr))
@@ -261,10 +331,25 @@ def consider_executing_command(args, hashfile):
             logger.info("Succeeded; stdout (because of enable_syslog): " + str(stdout))
 
         logger.info("Succeeded - updating hashfile " + hashfile)
-        hashfile_contents = {'stdout': str(stdout), 'stderr': str(stderr), 'returncode': returncode,
-                             'lastsuccessfulrun': str(datetime.now())}
+        hashfile_contents = {'stdout': str(stdout), 'stderr': str(
+            stderr), 'returncode': returncode, 'lastsuccessfulrun': str(datetime.now())}
         with os.fdopen(os.open(hashfile, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, stat.S_IRUSR | stat.S_IWUSR), 'w') as hashfile_fp:
             json.dump(hashfile_contents, hashfile_fp, indent=4)
+
+
+def once_lock_gotten(args, hashfile, lock, lockfile, pidfile):
+    logger = logging.getLogger('cromer')
+
+    logger.debug("Lock " + lockfile + " acquired.")
+    write_pid(pidfile)
+    try:
+        consider_executing_command(args, hashfile)
+    finally:
+        logger.debug("Releasing lock.")
+        lock.release()
+        logger.debug("Deleting PID file " + pidfile)
+        os.remove(pidfile)
+        logger.debug("Lock " + lockfile + " released.")
 
 
 def main():
@@ -274,25 +359,46 @@ def main():
 
     hashfile = determine_hashfile_name(args)
     lockfile = determine_lockfile_name(hashfile)
+    pidfile = determine_pidfile_name(lockfile)
 
     logger.info("Hashfile for this command: " + hashfile)
     logger.debug("Lockfile for this command: " + lockfile)
+    logger.debug("PID file for this command: " + pidfile)
 
     lock = fasteners.InterProcessLock(lockfile)
     gotten = lock.acquire(blocking=False)
     if gotten:
-        logger.debug("Lock " + lockfile + " acquired.")
-        try:
-            consider_executing_command(args, hashfile)
-        finally:
-            lock.release()
-            logger.debug("Lock " + lockfile + " released.")
+        once_lock_gotten(args, hashfile, lock, lockfile, pidfile)
     else:
-        if not (os.path.isfile(hashfile) and within_success_period(args, hashfile)):
-            logger.error("Could not get lockfile " + lockfile + "; this command is already running under cromer.")
-            sys.exit(104)
+        if os.path.isfile(hashfile):
+            logger.warning("Could not get lockfile " + lockfile + "; hashfile is still present.")
+            if within_success_period(args, hashfile):
+                logger.error("Still within success interval; quitting.")
+                sys.exit(104)
+            elif not within_timeout_period(args, pidfile):
+                pid = read_pid(pidfile)
+                logger.warning("Previous execution has exceeded timeout period but not died, pid=" +
+                               str(pid) + ", attempting to kill.")
+                if(terminate_or_kill(pid)):
+                    lock = fasteners.InterProcessLock(lockfile)
+                    gotten = lock.acquire(blocking=False)
+                    if gotten:
+                        once_lock_gotten(args, hashfile, lock, lockfile, pidfile)
+                    else:
+                        logger.error("Still cannot acquire lock.")
+                        sys.exit(105)
+                else:
+                    logger.error("Cannot kill previous process.")
+                    sys.exit(106)
+            else:
+                logger.warning("Still within timeout period but not success interval. Will quit "
+                               "and allow command to continue running.")
+                sys.exit(108)
         else:
-            logger.debug("Could not get lockfile " + lockfile + ", but still within success period.")
+            logger.error("Could not get lockfile " + lockfile +
+                         " but hashfile is not present; this probably means cromer has never run"
+                         " successfully for this command and instances of cromer are overlapping.")
+            sys.exit(107)
 
 if __name__ == "__main__":
     main()

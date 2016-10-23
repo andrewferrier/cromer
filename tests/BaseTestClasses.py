@@ -50,15 +50,19 @@ class CromerTestCase(unittest.TestCase):
         file_h = tempfile.NamedTemporaryFile(delete=False, dir=self.fake_user_dir)
         file_h.close()
         yield file_h.name
-        os.remove(file_h.name)
+        # os.remove(file_h.name)
 
-    def createMockSubprocessContent(self, filename, stdout=False, stderr=False, returncode=0, delay=0):
+    def createMockSubprocessContent(self, filename, stdout=False, stderr=False, returncode=0, delay=0, trapexit=False):
+        assert not (trapexit is True and delay <= 0)
+
         with open(filename, 'w') as fp:
             fp.write('#!/bin/sh\n')
             if stdout:
                 fp.write('echo "Stdout content"\n')
             if stderr:
                 fp.write('>&2 echo "Stderr content"\n')
+            if trapexit:
+                fp.write('function finish { sleep 99999; }\ntrap finish SIGTERM\n')
             if delay != 0:
                 fp.write('sleep ' + str(delay) + "\n")
             fp.write('exit ' + str(returncode) + "\n")
@@ -95,3 +99,4 @@ class CromerTestCase(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.fake_user_dir)
+
