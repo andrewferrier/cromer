@@ -19,9 +19,10 @@ from stat import S_IRUSR, S_IWUSR
 
 import fasteners
 
-assert sys.version_info >= (3,3)
+assert sys.version_info >= (3, 3)
 
 HASH_AND_LOCK_ROOT = os.path.join(os.path.expanduser("~"), ".cromer/")
+
 
 def parse_time_interval(time_str):
     regex = re.compile(r'((?P<weeks>\d+?)w)?((?P<days>\d+?)d)?((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?((?P<seconds>\d+?)s)?')

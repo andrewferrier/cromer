@@ -8,6 +8,7 @@ TEST_ACCURACY_THRESHOLD = 0.4
 
 
 class TestBasic(CromerTestCase):
+
     def setUp(self):
         super(TestBasic, self).setUp()
 
@@ -50,7 +51,8 @@ class TestBasic(CromerTestCase):
     def test_pathenv(self):
         with self.createMockFile() as filename:
             self.createMockSubprocessContent(filename)
-            completed = self.runAsSubProcess(os.path.basename(filename), path_env=(os.environ['PATH'] + ":" + os.path.dirname(filename)))
+            completed = self.runAsSubProcess(os.path.basename(filename), path_env=(
+                os.environ['PATH'] + ":" + os.path.dirname(filename)))
             self.assertEqual(completed.stdout, b'')
             self.assertEqual(completed.stderr, b'')
             self.assertEqual(completed.returncode, 0)
@@ -295,8 +297,6 @@ class TestBasic(CromerTestCase):
             # Assert that it's still running (because timeout has been trapped)
             self.assertIsNone(process1.poll())
             self.createMockSubprocessContent(filename, delay=2)
-            a = self.get_time_in_seconds()
             process2 = self.runAsSubProcess('-vv -X 7s -t 4s ' + filename, wait=True)
-            b = self.get_time_in_seconds()
             self.assertEqual(process2.returncode, 106)
             self.assertRegex(process2.stderr, b'(?i)cannot kill')

@@ -99,4 +99,3 @@ class CromerTestCase(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.fake_user_dir)
-
