@@ -75,4 +75,7 @@ make syserr-based logs more attractive. There is support in my sister project
 
 # Hacking
 
+Install pre-requisite packages with `pip3 install -r
+requirements-hacking.txt`.
+
 Any pull requests/issues welcome.

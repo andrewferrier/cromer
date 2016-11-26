@@ -29,7 +29,9 @@ class CromerTestCase(unittest.TestCase):
         if path_env is not None:
             my_env['PATH'] = path_env
 
-        my_process = subprocess.Popen(CromerTestCase.COMMAND + ' ' + args,
+        unittest_prefix = os.getenv('UNITTEST_PREFIX', '')
+
+        my_process = subprocess.Popen(unittest_prefix + " " + CromerTestCase.COMMAND + ' ' + args,
                                       shell=True,
                                       stdout=(subprocess.PIPE if wait else subprocess.DEVNULL),
                                       stderr=(subprocess.PIPE if wait else subprocess.DEVNULL),

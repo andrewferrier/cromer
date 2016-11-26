@@ -43,3 +43,10 @@ unittest:
 
 unittest_verbose:
 	python3 -m unittest discover -s tests/ -f -v
+
+coverage:
+	coverage erase
+	rm -rf cover/
+	UNITTEST_PREFIX='coverage run -a --branch' python3 -m unittest discover -s tests/
+	coverage html -d cover
+	open cover/index.html
