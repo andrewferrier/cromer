@@ -10,4 +10,8 @@ class Cromer < Formula
       bin.install "cromer"
       doc.install "README.md", "LICENSE.txt"
   end
+
+  test do
+    system "make", "unittest"
+  end
 end
