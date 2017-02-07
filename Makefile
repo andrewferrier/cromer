@@ -24,14 +24,11 @@ builddeb: determineversion
 	fakeroot chmod -R u+x $(TEMPDIR)/usr/bin
 	fakeroot dpkg-deb --build $(TEMPDIR) .
 
-makebrewlinks:
-	ln -sf $(ROOT_DIR)/brew/cromer.rb /usr/local/Library/Formula
+install_osx_brew: determineversion_brew
+	brew install -f file://$(ROOT_DIR)/brew/cromer.rb
 
-installbrew: makebrewlinks determineversion_brew
-	brew install -f cromer
-
-reinstallbrew: makebrewlinks determineversion_brew
-	brew reinstall cromer
+reinstallbrew: determineversion_brew
+	brew reinstall file://$(ROOT_DIR)/brew/cromer.rb
 
 analysis:
 	# Debian version is badly packaged, make sure we are using Python 3.
