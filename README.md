@@ -41,16 +41,15 @@ command-line options are:
 * `-X` - the original motivation for writing cromer. This can be set to any
   time period in weeks, days, hours, minutes, or seconds (e.g. `-X5w7m`).
   Assuming an identical command (with the same command-line parameters) has
-  previously run successfully, cromer will ignore failures within that time
-  period by swallowing the command's return code and stderr, as long as the
-  command succeeds again before the time period expires. State is kept by
+  previously run successfully (probably by cron), cromer will ignore failures from invoking the exact same command again (again, probably from the same cron job) within that time
+  period by swallowing the command's return code and stderr. If there hasn't been a success since at least the length of this period, and cromer is run by cron, failures will be reported as normal. State is kept by
   using a file of the form `~/.cromer.xyz123.pingsomeremotehost`, where the
   part after the second dot is an SHA1 hash of the complete command name
   (including options), and after the third dot is a 'compressed' readable
   version of the same (this latter part is only added when the `-r` option is
-  used). This option effectively enables cron jobs to bet set on a regular,
+  used). This option effectively enables cron jobs to be set on a regular,
   fairly short timer (e.g. every hour), but occasional failures to be
-  *ignored* - as long as the job generally passes.
+  *ignored* - as long as the job passes at least once every period specified by this option.
 
 * `-t` - very similar to the Unix command
   [timeout](http://man7.org/linux/man-pages/man1/timeout.1.html). However, the
