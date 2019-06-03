@@ -41,15 +41,19 @@ command-line options are:
 * `-X` - the original motivation for writing cromer. This can be set to any
   time period in weeks, days, hours, minutes, or seconds (e.g. `-X5w7m`).
   Assuming an identical command (with the same command-line parameters) has
-  previously run successfully (probably by cron), cromer will ignore failures from invoking the exact same command again (again, probably from the same cron job) within that time
-  period by swallowing the command's return code and stderr. If there hasn't been a success since at least the length of this period, and cromer is run by cron, failures will be reported as normal. State is kept by
-  using a file of the form `~/.cromer.xyz123.pingsomeremotehost`, where the
-  part after the second dot is an SHA1 hash of the complete command name
-  (including options), and after the third dot is a 'compressed' readable
-  version of the same (this latter part is only added when the `-r` option is
-  used). This option effectively enables cron jobs to be set on a regular,
-  fairly short timer (e.g. every hour), but occasional failures to be
-  *ignored* - as long as the job passes at least once every period specified by this option.
+  previously run successfully (probably by cron), cromer will ignore failures
+  from invoking the exact same command again (again, probably from the same
+  cron job) within that time period by swallowing the command's return code
+  and stderr. If there hasn't been a success since at least the length of this
+  period, and cromer is run by cron, failures will be reported as normal.
+  State is kept by using a file of the form
+  `~/.cromer/pingsomeremotehost.xyz123`, where the first part of the filename
+  is a 'compressed' readable version of the same (this is only added when the
+  `-r` option is used), and the second part is an SHA1 hash of the complete
+  command name (including options). This option effectively enables cron jobs
+  to be set on a regular, fairly short timer (e.g. every hour), but occasional
+  failures to be *ignored* - as long as the job passes at least once every
+  period specified by this option.
 
 * `-t` - very similar to the Unix command
   [timeout](http://man7.org/linux/man-pages/man1/timeout.1.html). However, the
@@ -57,7 +61,8 @@ command-line options are:
 
 # Pre-requisites
 
-This is supported and tested on Python 3.3+. It is unlikely to work on an earlier version.
+This is supported and tested on Python 3.3+. It is unlikely to work on an
+earlier version.
 
 # Installing
 
