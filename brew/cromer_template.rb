@@ -4,7 +4,7 @@ class Cromer < Formula
   url "https://github.com/andrewferrier/cromer/archive/X.Y.zip"
   version "X.Y"
 
-  depends_on :python3
+  depends_on "python"
 
   def install
       bin.install "cromer"
