@@ -1,6 +1,6 @@
 # Cromer
 
-**⚠️ DEPRECATED: This repository is deprecated, as I don't use email2pdf any more or have the time to maintain it. For now, it will remain here in case anyone wishes to fork and maintain it.**
+**⚠️ DEPRECATED: This repository is deprecated, as I don't use cromer any more or have the time to maintain it. For now, it will remain here in case anyone wishes to fork and maintain it.**
 
 Cromer is a utility that can be wrapped around any command, and subdues
 periodic/occasional failures at calling that exact same command. It maintains
